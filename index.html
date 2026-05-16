@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Wotagoods Manager</title>
+    <meta name="description" content="A local-first web app shell for managing tapestry collections.">
+    <meta name="theme-color" content="#2f6f73">
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <main class="app-shell" aria-label="Wotagoods Manager">
+      <aside class="sidebar" aria-label="Main navigation">
+        <div class="brand">
+          <div class="brand-mark" aria-hidden="true">W</div>
+          <div>
+            <h1>Wotagoods</h1>
+            <p>Tapestry manager</p>
+          </div>
+        </div>
+
+        <nav class="nav-list" id="navList" aria-label="Views"></nav>
+      </aside>
+
+      <section class="workspace">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow" id="viewSection">Overview</p>
+            <h2 id="viewTitle">Dashboard</h2>
+          </div>
+        </header>
+
+        <section class="view-panel" id="viewPanel" aria-live="polite"></section>
+      </section>
+    </main>
+
+    <script type="module" src="app.js"></script>
+  </body>
+</html>
