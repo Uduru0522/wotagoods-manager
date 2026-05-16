@@ -54,4 +54,5 @@ server.listen(port, () => {
 
   console.log("Wotagoods Manager is running.");
   console.log(`User mode:  ${baseUrl}`);
+  console.log(`Debug mode: ${baseUrl}?debug=1`);
 });

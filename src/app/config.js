@@ -1,4 +1,5 @@
 export const APP_CONFIG = {
+  debugQueryParam: "debug",
   defaultViewId: "dashboard",
   layout: {
     narrowQuery: "(max-width: 760px)",

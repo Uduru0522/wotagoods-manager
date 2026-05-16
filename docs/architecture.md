@@ -7,7 +7,7 @@ Wotagoods Manager is intentionally dependency-free for now. The code is organize
 1. `index.html` loads `src/bootstrap/theme-bootstrap.js` before CSS. This applies the saved theme before first paint and prevents a light-mode flash.
 2. `index.html` loads `src/styles/app.css`.
 3. `src/main.js` imports `src/app/app-shell.js`.
-4. `createApp()` loads goods types, builds view definitions, creates services, creates navigation, and creates the router.
+4. `createApp()` creates the runtime mode, loads goods types, builds view definitions, creates services, creates navigation, and creates the router.
 5. `start()` initializes theme, renders navigation, binds scroll behavior, opens the default view, and registers the service worker.
 
 ## Module Boundaries
@@ -18,6 +18,7 @@ Owns application assembly and app-level behavior.
 
 - `app-shell.js`: composition root. Wires data, services, navigation, router, and startup behavior.
 - `app-elements.js`: required DOM lookup for shell elements.
+- `app-mode.js`: user/debug mode detection.
 - `config.js`: shared constants for selectors, theme, layout, and defaults.
 - `layout-transition.js`: wide/narrow breakpoint transition state.
 - `view-router.js`: active view switching, title updates, and view transition timing.
@@ -35,9 +36,9 @@ This duplicates a small part of `src/services/theme.js` on purpose. The service 
 
 Owns data boundaries and schema-shaped metadata.
 
-- `goods-types.js`: goods-type table metadata and the future database integration point.
+- `goods-types.js`: debug goods-type records, goods-type table metadata, and the future database integration point.
 
-The app currently returns no goods types because persistence is not implemented yet.
+User mode currently returns no goods types because persistence is not implemented yet. Debug mode returns hardcoded goods types for UI testing.
 
 ### `src/navigation/`
 
@@ -126,7 +127,7 @@ The planned database shape is:
 - Each goods type owns one generated item table.
 - Adding a goods type in Administration should create the goods type record and generate the matching item table.
 
-Goods type records should include the future table mapping:
+Current debug records already include the future table mapping:
 
 - `id`
 - `label`

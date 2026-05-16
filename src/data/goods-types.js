@@ -7,7 +7,32 @@ export const GOODS_TYPE_COLUMNS = [
   { key: "description", label: "Description", type: "text" }
 ];
 
-export function loadGoodsTypes() {
+export const DEBUG_GOODS_TYPES = [
+  {
+    id: "tapestries",
+    label: "Tapestries",
+    tableName: "goods_tapestries",
+    description: "Wall scrolls, fabric posters, and related display goods."
+  },
+  {
+    id: "figures",
+    label: "Figures",
+    tableName: "goods_figures",
+    description: "Scale figures, prize figures, and boxed display items."
+  },
+  {
+    id: "acrylic-goods",
+    label: "Acrylic goods",
+    tableName: "goods_acrylic_goods",
+    description: "Acrylic stands, keychains, panels, and similar goods."
+  }
+];
+
+export function loadGoodsTypes({ isDebugMode }) {
+  if (isDebugMode) {
+    return [...DEBUG_GOODS_TYPES];
+  }
+
   return loadDatabaseGoodsTypes();
 }
 

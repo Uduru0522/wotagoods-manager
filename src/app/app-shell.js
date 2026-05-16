@@ -1,3 +1,4 @@
+import { createAppMode } from "./app-mode.js";
 import { getAppElements } from "./app-elements.js";
 import { APP_CONFIG } from "./config.js";
 import { bindLayoutTransition } from "./layout-transition.js";
@@ -13,7 +14,8 @@ import { createViewRenderer } from "../views/view-renderer.js";
 
 export function createApp() {
   const elements = getAppElements();
-  const goodsTypes = loadGoodsTypes();
+  const appMode = createAppMode();
+  const goodsTypes = loadGoodsTypes(appMode);
   const views = createViewDefinitions(goodsTypes);
   const themeController = createThemeController();
   const renderer = createViewRenderer({ goodsTypes, themeController });

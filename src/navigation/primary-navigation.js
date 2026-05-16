@@ -12,7 +12,7 @@ function createEmptyGoodsNotice() {
     textContent: "No goods types yet"
   });
 
-  note.title = "Create a goods type in Administration.";
+  note.title = "Create a goods type in Administration, or open debug mode for sample types.";
 
   return note;
 }

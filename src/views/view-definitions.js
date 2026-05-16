@@ -77,7 +77,7 @@ export function createViewDefinitions(goodsTypes) {
       content: {
         heading: "Start by creating a goods type.",
         description:
-          "Collection summaries will appear after goods types exist. Go to Administration to define your first type."
+          "User mode will show collection summaries after goods types exist. Go to Administration to define your first type, or open Debug mode to preview the planned goods-type navigation with temporary sample data."
       }
     },
     ...createGoodsTypeViews(goodsTypes),

@@ -12,6 +12,12 @@ Open:
 http://localhost:4173
 ```
 
+Debug mode:
+
+```text
+http://localhost:4173?debug=1
+```
+
 The app can be opened directly through `index.html`, but the local server is preferred because manifest and service worker behavior are browser-origin dependent.
 
 ## Verification
@@ -27,6 +33,7 @@ node --check server.js
 Then start the server and verify:
 
 - `http://localhost:4173`
+- `http://localhost:4173?debug=1`
 
 ## Browser Storage
 
@@ -61,9 +68,22 @@ localStorage.removeItem("wotagoods.theme")
 
 Keep route/view IDs stable. They are used by navigation state and router state.
 
-## Goods Type Data
+## Adding A Goods Type For Debug Mode
 
-The future database implementation should replace `loadDatabaseGoodsTypes()` in `src/data/goods-types.js`.
+Edit `DEBUG_GOODS_TYPES` in `src/data/goods-types.js`.
+
+Use stable IDs and table names:
+
+```js
+{
+  id: "example_goods",
+  label: "Example goods",
+  tableName: "goods_example_goods",
+  description: "Short description."
+}
+```
+
+This is only debug data. The future database implementation should replace `loadDatabaseGoodsTypes()`.
 
 ## Theme Rules
 
