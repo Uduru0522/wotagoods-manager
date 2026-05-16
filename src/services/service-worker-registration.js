@@ -1,4 +1,4 @@
-import { APP_CONFIG } from "./config.js";
+import { APP_CONFIG } from "../app/config.js";
 
 export function registerServiceWorker() {
   if (!("serviceWorker" in navigator)) {

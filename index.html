@@ -4,23 +4,30 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Wotagoods Manager</title>
-    <meta name="description" content="A local-first web app shell for managing tapestry collections.">
+    <meta name="description" content="A local-first web app shell for managing multiple goods collections.">
     <meta name="theme-color" content="#2f6f73">
+    <script src="src/bootstrap/theme-bootstrap.js"></script>
     <link rel="manifest" href="manifest.webmanifest">
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="src/styles/app.css">
   </head>
   <body>
     <main class="app-shell" aria-label="Wotagoods Manager">
       <aside class="sidebar" aria-label="Main navigation">
-        <div class="brand">
-          <div class="brand-mark" aria-hidden="true">W</div>
-          <div>
-            <h1>Wotagoods</h1>
-            <p>Tapestry manager</p>
+        <div class="sidebar-header">
+          <div class="brand">
+            <div class="brand-mark" aria-hidden="true">W</div>
+            <div>
+              <h1>Wotagoods</h1>
+              <p>Goods manager</p>
+            </div>
           </div>
+
+          <nav class="utility-nav-list" id="utilityNavList" aria-label="Application views"></nav>
         </div>
 
-        <nav class="nav-list" id="navList" aria-label="Views"></nav>
+        <div class="navigation-stack">
+          <nav class="nav-list" id="primaryNavList" aria-label="Main views"></nav>
+        </div>
       </aside>
 
       <section class="workspace">
@@ -35,6 +42,6 @@
       </section>
     </main>
 
-    <script type="module" src="app.js"></script>
+    <script type="module" src="src/main.js"></script>
   </body>
 </html>

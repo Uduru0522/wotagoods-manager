@@ -50,5 +50,8 @@ const server = http.createServer((request, response) => {
 });
 
 server.listen(port, () => {
-  console.log(`Wotagoods Manager is running at http://localhost:${port}`);
+  const baseUrl = `http://localhost:${port}`;
+
+  console.log("Wotagoods Manager is running.");
+  console.log(`User mode:  ${baseUrl}`);
 });

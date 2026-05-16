@@ -1,12 +1,12 @@
-import { APP_CONFIG } from "./config.js";
+import { APP_CONFIG } from "../app/config.js";
 import { createStorage } from "./storage.js";
 
 export function createThemeController() {
-  const { dark, light } = APP_CONFIG.theme;
-  const storage = createStorage("wotagoods");
+  const { colors, dark, light, storageKey, storageNamespace } = APP_CONFIG.theme;
+  const storage = createStorage(storageNamespace);
 
   function getSavedTheme() {
-    return storage.get("theme");
+    return storage.get(storageKey);
   }
 
   function getTheme() {
@@ -15,8 +15,12 @@ export function createThemeController() {
 
   function setTheme(theme) {
     const normalizedTheme = theme === dark ? dark : light;
+    const themeColorMeta = document.querySelector('meta[name="theme-color"]');
+
     document.documentElement.dataset.theme = normalizedTheme;
-    storage.set("theme", normalizedTheme);
+    document.documentElement.style.colorScheme = normalizedTheme;
+    themeColorMeta?.setAttribute("content", colors[normalizedTheme]);
+    storage.set(storageKey, normalizedTheme);
   }
 
   function initialize() {
