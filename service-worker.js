@@ -1,4 +1,4 @@
-const CACHE_NAME = "wotagoods-manager-v45";
+const CACHE_NAME = "wotagoods-manager-v46";
 
 const ASSET_GROUPS = {
   app: [
@@ -21,6 +21,8 @@ const ASSET_GROUPS = {
     "./src/data/contracts/storage-contract.js",
     "./src/data/debug/debug-fixtures.js",
     "./src/data/debug/debug-storage.js",
+    "./src/data/indexeddb/database-schema.js",
+    "./src/data/indexeddb/indexeddb-storage.js",
     "./src/data/models/goods-type.js"
   ],
   install: [
