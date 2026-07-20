@@ -1,3 +1,7 @@
 import { createApp } from "./app/app-shell.js";
 
-createApp().start();
+const app = createApp();
+
+void app.start().catch((error) => {
+  console.error("Application startup failed:", error);
+});

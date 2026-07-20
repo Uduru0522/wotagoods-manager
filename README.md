@@ -2,7 +2,9 @@
 
 A local-first web app shell for managing multiple types of goods.
 
-The current project is the application shell: navigation, responsive layout, theme handling, placeholder views, debug goods types, and extension points for the future database layer.
+The current project includes the application shell, isolated debug data, and the
+versioned IndexedDB persistence foundation. Goods-type and item mutation forms
+are not implemented yet.
 
 ## Quick Start
 
@@ -28,7 +30,8 @@ The server prints both URLs when it starts.
 
 ## Modes
 
-User mode is the default. It expects goods types to come from the future database layer, so the goods-type list is empty for now.
+User mode is the default. It opens the local IndexedDB database, but the
+goods-type list remains empty until the creation form is implemented.
 
 Debug mode is enabled with `?debug=1`. It loads hardcoded goods types from
 `src/data/debug/debug-fixtures.js`. These values are not saved and are only for
@@ -45,6 +48,8 @@ layout and flow testing.
 - Dark mode persisted in browser `localStorage`.
 - Responsive wide/sidebar and narrow/top-navigation layouts.
 - Local web app manifest and service worker registration.
+- Versioned IndexedDB initialization in user mode.
+- Isolated in-memory storage in debug mode.
 
 ## Project Map
 

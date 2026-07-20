@@ -76,7 +76,7 @@ export function renderAdministrationView(view, { goodsTypes }) {
       createElement("p", {
         className: "empty-note",
         textContent:
-          "No goods types were loaded. This is expected until the database layer and goods-type creation form are implemented."
+          "No goods types are saved yet. Goods-type creation will be available from this view."
       })
     );
   }

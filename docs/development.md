@@ -22,15 +22,16 @@ The app can be opened directly through `index.html`, but the local server is pre
 
 ## Verification
 
-There is no test runner yet. Use syntax checks and a server smoke test after structural changes.
+Run the complete static and unit-test suite:
 
 ```powershell
-Get-ChildItem src -Recurse -Filter *.js | ForEach-Object { node --check $_.FullName }
-node --check service-worker.js
-node --check server.js
+npm run check
 ```
 
-Then start the server and verify:
+`npm run check` validates JavaScript syntax and referenced static assets, then
+runs the dependency-free `node:test` suite in `test/`.
+
+After runtime or layout changes, start the server and verify:
 
 - `http://localhost:4173`
 - `http://localhost:4173?debug=1`
@@ -59,9 +60,9 @@ localStorage.getItem("wotagoods.theme")
 localStorage.removeItem("wotagoods.theme")
 ```
 
-Future collection data will use IndexedDB, not `localStorage`. User mode and
-debug mode must use separate storage adapters; debug fixtures must never be
-written to the user database.
+Collection data uses IndexedDB, not `localStorage`. User mode initializes the
+database even while it contains no records. Debug mode uses a separate in-memory
+adapter and never opens or writes the user database.
 
 Browser storage is origin-specific. These locations do not share settings or
 future IndexedDB data:

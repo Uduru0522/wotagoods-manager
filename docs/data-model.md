@@ -1,7 +1,8 @@
 # Data Model Design
 
 This document defines the planned browser-local persistence model and mutation
-workflows. It is a design contract only; persistence is not implemented yet.
+workflows. The version-1 IndexedDB foundation is implemented; goods-type, field,
+item, and transfer mutations remain design contracts for later milestones.
 
 ## Goals
 
@@ -16,7 +17,7 @@ workflows. It is a design contract only; persistence is not implemented yet.
 
 ## Platform Choice
 
-User mode will use IndexedDB. It is the browser's transactional database for
+User mode uses IndexedDB. It is the browser's transactional database for
 structured records and binary values such as `Blob` objects.
 
 The application will use one database:

@@ -637,6 +637,36 @@ textarea {
     border-color var(--motion-fast) ease;
 }
 
+.startup-state {
+  gap: 12px;
+}
+
+.startup-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.primary-action {
+  min-height: 36px;
+  padding: 8px 14px;
+  color: var(--surface);
+  background: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.primary-action:hover {
+  filter: brightness(1.06);
+}
+
+.primary-action:focus-visible {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
 .content-panel {
   align-content: start;
   gap: 14px;

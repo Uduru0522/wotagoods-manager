@@ -1,14 +1,20 @@
 # Architecture
 
-Wotagoods Manager is intentionally dependency-free for now. The code is organized so the app shell can stay stable while the future database layer, real forms, and item views are added.
+Wotagoods Manager is intentionally dependency-free for now. The code is organized
+so the app shell and IndexedDB boundary can stay stable while mutation workflows,
+real forms, and item views are added.
 
 ## Runtime Flow
 
 1. `index.html` loads `src/bootstrap/theme-bootstrap.js` before CSS. This applies the saved theme before first paint and prevents a light-mode flash.
 2. `index.html` loads `src/styles/app.css`.
 3. `src/main.js` imports `src/app/app-shell.js`.
-4. `createApp()` creates the runtime mode, loads goods types, builds view definitions, creates services, creates navigation, and creates the router.
-5. `start()` initializes theme, renders navigation, binds scroll behavior, opens the default view, and registers the service worker.
+4. `createApp()` creates the runtime mode, shell services, and startup coordinator.
+5. `start()` initializes theme and shell behavior, selects the storage adapter,
+   awaits storage initialization and goods-type loading, then creates views,
+   navigation, and the router.
+6. Startup storage failures render a retryable state instead of being interpreted
+   as an empty collection.
 
 ## Module Boundaries
 
@@ -21,6 +27,7 @@ Owns application assembly and app-level behavior.
 - `app-mode.js`: user/debug mode detection.
 - `config.js`: shared constants for selectors, theme, layout, and defaults.
 - `layout-transition.js`: wide/narrow breakpoint transition state.
+- `startup-state.js`: storage loading and recoverable startup-error rendering.
 - `view-router.js`: active view switching, title updates, and view transition timing.
 - `view-scroll-state.js`: compact title-bar state based on view scroll position.
 
@@ -41,9 +48,9 @@ become the boundary between application operations and persistence.
 - `debug/`: in-memory debug fixtures and adapter.
 - `models/`: domain record construction and validation.
 
-User mode currently returns no goods types because persistence is not implemented
-yet. Debug mode returns hardcoded goods types for UI testing. Application startup
-will next select between IndexedDB and the in-memory debug adapter.
+User mode opens the versioned IndexedDB database and currently returns no goods
+types because creation forms are not implemented yet. Debug mode uses hardcoded
+in-memory records and never opens IndexedDB.
 
 ### `src/navigation/`
 
@@ -126,7 +133,7 @@ nav: { group: "utility" }
 
 ## Data Model Direction
 
-User mode will use IndexedDB through an application-owned storage contract.
+User mode uses IndexedDB through an application-owned storage contract.
 Physical object stores remain stable; goods types, field definitions, and custom
 values are records rather than generated database tables.
 
@@ -145,11 +152,11 @@ versioning, and mutation workflows.
 
 ### Persistence Integration Constraints
 
-IndexedDB is asynchronous. When persistence work begins, the composition root
-must select the adapter from app mode, await adapter initialization, and then load
-goods types before constructing data-dependent views and navigation. Startup must
-render an explicit loading state and a recoverable storage-error state rather
-than silently treating a failed database as an empty collection.
+IndexedDB is asynchronous. The composition root selects the adapter from app
+mode, awaits adapter initialization, and then loads goods types before constructing
+data-dependent views and navigation. Startup renders an explicit loading state
+and a recoverable storage-error state rather than silently treating a failed
+database as an empty collection.
 
 Mutation coordination belongs at application level. Individual views request a
 domain operation; they do not open transactions or independently manage global
