@@ -18,6 +18,10 @@ import {
 } from "../../src/data/contracts/storage-contract.js";
 import { createGoodsTypeRepository } from "../../src/data/indexeddb/goods-type-repository.js";
 import { createFieldDefinitionRepository } from "../../src/data/indexeddb/field-definition-repository.js";
+import {
+  USER_DATA_STORES,
+  createLocalDataRepository
+} from "../../src/data/indexeddb/local-data-repository.js";
 
 function createFakeDatabase() {
   const stores = new Map();
@@ -127,6 +131,56 @@ function createWriteDatabase({ failAt = -1 } = {}) {
     },
     transactions,
     writes
+  };
+}
+
+function createClearDatabase({ failAt = -1 } = {}) {
+  const clearedStores = [];
+  const transactions = [];
+
+  return {
+    clearedStores,
+    transaction(storeNames, mode) {
+      const requests = [];
+      const transaction = {
+        error: null,
+        objectStore(storeName) {
+          return {
+            clear() {
+              const request = {};
+              requests.push({ request, storeName });
+
+              if (requests.length === USER_DATA_STORES.length) {
+                queueMicrotask(() => {
+                  const failedRequest = requests[failAt];
+
+                  if (failedRequest) {
+                    const failure = new Error("clear failed");
+                    transaction.error = failure;
+                    failedRequest.request.error = failure;
+                    failedRequest.request.onerror();
+                    transaction.onabort();
+                    return;
+                  }
+
+                  requests.forEach(({ request: queuedRequest, storeName: queuedStore }) => {
+                    clearedStores.push(queuedStore);
+                    queuedRequest.onsuccess();
+                  });
+                  transaction.oncomplete();
+                });
+              }
+
+              return request;
+            }
+          };
+        }
+      };
+
+      transactions.push({ mode, storeNames });
+      return transaction;
+    },
+    transactions
   };
 }
 
@@ -536,4 +590,29 @@ test("field definition repository rejects mismatched writes before a transaction
     (error) => error instanceof StorageError && error.code === STORAGE_ERROR_CODES.invalidData
   );
   assert.deepEqual(database.transactions, []);
+});
+
+test("local data repository clears every user-data store in one transaction", async () => {
+  const database = createClearDatabase();
+  const repository = createLocalDataRepository(database);
+
+  await repository.reset();
+
+  assert.deepEqual(database.transactions, [
+    { mode: "readwrite", storeNames: USER_DATA_STORES }
+  ]);
+  assert.deepEqual(database.clearedStores, USER_DATA_STORES);
+  assert.equal(database.clearedStores.includes(OBJECT_STORES.metadata), false);
+});
+
+test("local data repository reports an aborted reset without a partial clear", async () => {
+  const database = createClearDatabase({ failAt: 2 });
+  const repository = createLocalDataRepository(database);
+
+  await assert.rejects(
+    repository.reset(),
+    (error) =>
+      error instanceof StorageError && error.code === STORAGE_ERROR_CODES.operationFailed
+  );
+  assert.deepEqual(database.clearedStores, []);
 });

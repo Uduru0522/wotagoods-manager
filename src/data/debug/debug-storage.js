@@ -138,6 +138,12 @@ export function createDebugStorage({
     return structuredClone(parsedFields);
   }
 
+  async function resetData() {
+    assertInitialized();
+    records.splice(0, records.length);
+    fieldRecords.splice(0, fieldRecords.length);
+  }
+
   function close() {
     isInitialized = false;
   }
@@ -148,6 +154,7 @@ export function createDebugStorage({
     initialize,
     listFieldDefinitions,
     listGoodsTypes,
+    resetData,
     saveFieldDefinitions
   };
 }

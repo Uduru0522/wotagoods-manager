@@ -222,3 +222,16 @@ test("DebugStorage lists fixture fields and applies isolated field changes", asy
   );
   assert.equal((await storage.listFieldDefinitions("figures")).length, 4);
 });
+
+test("DebugStorage reset clears all temporary domain records", async () => {
+  const storage = createDebugStorage();
+
+  await storage.initialize();
+  assert.equal((await storage.listGoodsTypes()).length, 3);
+  assert.equal((await storage.listFieldDefinitions("figures")).length, 3);
+
+  await storage.resetData();
+
+  assert.deepEqual(await storage.listGoodsTypes(), []);
+  assert.deepEqual(await storage.listFieldDefinitions("figures"), []);
+});

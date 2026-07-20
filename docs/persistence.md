@@ -50,6 +50,7 @@ listGoodsTypes
 createGoodsType
 listFieldDefinitions
 saveFieldDefinitions
+resetData
 close
 ```
 
@@ -70,6 +71,8 @@ Examples:
 - creating a goods type uses one `goods_types` + `field_definitions` transaction
 - creating an item and its image uses one `assets` + `items` transaction
 - applying field changes uses one `field_definitions` transaction
+- resetting local data clears `goods_types`, `field_definitions`, `items`, and
+  `assets` in one transaction while preserving `app_metadata`
 - future type-changing field migrations include `items` in the same transaction
 
 Application-level busy state prevents conflicting UI operations. IndexedDB
