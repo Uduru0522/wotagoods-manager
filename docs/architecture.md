@@ -99,6 +99,7 @@ Owns browser/platform services.
 Generic helpers that should not know about Wotagoods-specific features.
 
 - `dom.js`: small DOM creation helper.
+- `content-transition.js`: reusable two-phase transitions for stateful workflow content.
 - `drag-scroll.js`: reusable pointer drag scrolling.
 - `icons.js`: icon creation.
 - `ui-components.js`: reusable view components.
@@ -109,6 +110,7 @@ Contains app-wide CSS. `app.css` currently holds design tokens, layout, view sty
 
 Important tokens:
 
+- `--motion-phase`: one half of an exit/enter content transition.
 - `--motion-fast`: fast UI state changes.
 - `--motion-enter`: lightweight feedback when workflow content is replaced.
 - `--motion-layout`: wide/narrow layout settle animation.

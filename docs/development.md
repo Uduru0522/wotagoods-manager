@@ -137,10 +137,15 @@ Prefer editing existing tokens before adding new hardcoded values. Important tok
 - navigation spacing
 - motion timing
 
-Keep interface motion subtle and at or below `200ms`. Use the shared `--motion-fast`,
-`--motion-enter`, and `--motion-layout` tokens instead of component-specific durations.
-The static verification script enforces this ceiling. New animation must also remain
-usable with the existing `prefers-reduced-motion` override.
+Keep interface motion subtle and at or below `200ms`. Use the shared
+`--motion-phase`, `--motion-fast`, `--motion-enter`, and `--motion-layout` tokens
+instead of component-specific durations. The static verification script enforces
+this ceiling. New animation must also remain usable with the existing
+`prefers-reduced-motion` override.
+
+Stateful workflows should use `src/shared/content-transition.js`. One `--motion-phase`
+is used before replacement and one after it, so their combined duration must remain
+within the same `200ms` ceiling.
 
 Responsive behavior currently has one breakpoint at `760px`, matching `APP_CONFIG.layout.narrowQuery`.
 

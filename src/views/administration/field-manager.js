@@ -1,4 +1,5 @@
 import { FIELD_CHANGE_KINDS } from "../../application/fields/manage-fields.js";
+import { createContentTransition } from "../../shared/content-transition.js";
 import { createElement } from "../../shared/dom.js";
 import { createFieldChangeReview } from "./field-change-review.js";
 import { createFieldChangeSet } from "./field-change-set.js";
@@ -15,6 +16,7 @@ function createButton(label, className = "secondary-action") {
 
 export function createFieldManager({ fieldManagement, goodsTypes, mutationController }) {
   const container = createElement("section", { className: "field-manager" });
+  const contentTransition = createContentTransition(container);
   let selectedGoodsTypeId = goodsTypes[0]?.id ?? "";
   let baseFields = [];
   let changeSet = null;
@@ -70,22 +72,26 @@ export function createFieldManager({ fieldManagement, goodsTypes, mutationContro
       })
     );
     controls.append(select, openButton);
-    container.replaceChildren(header, controls);
+    contentTransition.replace(() => {
+      container.replaceChildren(header, controls);
 
-    if (message) {
-      container.append(
-        createElement("p", { className: "field-manager-message", textContent: message })
-      );
-    }
+      if (message) {
+        container.append(
+          createElement("p", { className: "field-manager-message", textContent: message })
+        );
+      }
+    });
   }
 
   async function loadFields() {
-    container.replaceChildren(
-      createElement("div", {
-        className: "field-manager-loading",
-        textContent: "Loading fields..."
-      })
-    );
+    contentTransition.replace(() => {
+      container.replaceChildren(
+        createElement("div", {
+          className: "field-manager-loading",
+          textContent: "Loading fields..."
+        })
+      );
+    });
 
     try {
       baseFields = await fieldManagement.listFields(selectedGoodsTypeId);
@@ -105,6 +111,7 @@ export function createFieldManager({ fieldManagement, goodsTypes, mutationContro
     const chooseButton = createButton("Change collection");
     const addButton = createButton("Add field", "primary-action");
     const editorSlot = createElement("div", { className: "field-editor-slot" });
+    const editorTransition = createContentTransition(editorSlot, { animateInitial: true });
     const footer = createElement("div", { className: "field-stage-footer" });
     const stageStatus = createElement("span", {
       textContent: `${changeSet.changeCount} staged change${changeSet.changeCount === 1 ? "" : "s"}`
@@ -121,23 +128,25 @@ export function createFieldManager({ fieldManagement, goodsTypes, mutationContro
     );
     chooseButton.addEventListener("click", () => {
       if (changeSet.changeCount > 0) {
-        editorSlot.replaceChildren(
-          createElement("p", {
-            className: "form-warning",
-            textContent: "Discard the staged changes before choosing another collection."
-          })
-        );
+        editorTransition.replace(() => {
+          editorSlot.replaceChildren(
+            createElement("p", {
+              className: "form-warning",
+              textContent: "Discard the staged changes before choosing another collection."
+            })
+          );
+        });
         return;
       }
 
       renderLanding();
     });
-    addButton.addEventListener("click", () => openAddEditor(editorSlot));
+    addButton.addEventListener("click", () => openAddEditor(editorSlot, editorTransition));
     header.append(headerCopy, chooseButton);
 
     const list = createFieldList({
       fields: previewFields,
-      onEdit: (field) => openEditEditor(editorSlot, field),
+      onEdit: (field) => openEditEditor(editorSlot, editorTransition, field),
       onMove: (field, direction) => {
         changeSet.move(field.id, direction);
         renderWorkspace();
@@ -149,7 +158,7 @@ export function createFieldManager({ fieldManagement, goodsTypes, mutationContro
           return;
         }
 
-        openDeleteConfirmation(editorSlot, field);
+        openDeleteConfirmation(editorSlot, editorTransition, field);
       }
     });
 
@@ -173,44 +182,48 @@ export function createFieldManager({ fieldManagement, goodsTypes, mutationContro
       );
     }
 
-    container.replaceChildren(workspace);
+    contentTransition.replace(() => container.replaceChildren(workspace));
   }
 
-  function openAddEditor(editorSlot) {
+  function openAddEditor(editorSlot, editorTransition) {
     const draftId = `field-draft-${++draftNumber}`;
 
-    editorSlot.replaceChildren(
-      createFieldEditor({
-        field: null,
-        onCancel: () => editorSlot.replaceChildren(),
-        onSave: (values) => {
-          assertUniqueDisplayName(values.displayName);
-          changeSet.stageAdd({ draftId, ...values });
-          renderWorkspace();
-        }
-      })
-    );
-  }
-
-  function openEditEditor(editorSlot, field) {
-    editorSlot.replaceChildren(
-      createFieldEditor({
-        field,
-        onCancel: () => editorSlot.replaceChildren(),
-        onSave: (values) => {
-          assertUniqueDisplayName(values.displayName, field.id);
-          if (field.stagedKind === FIELD_CHANGE_KINDS.add) {
-            changeSet.updateDraft(field.id, values);
-          } else {
-            changeSet.stageUpdate(field.id, values);
+    editorTransition.replace(() => {
+      editorSlot.replaceChildren(
+        createFieldEditor({
+          field: null,
+          onCancel: () => editorTransition.replace(() => editorSlot.replaceChildren()),
+          onSave: (values) => {
+            assertUniqueDisplayName(values.displayName);
+            changeSet.stageAdd({ draftId, ...values });
+            renderWorkspace();
           }
-          renderWorkspace();
-        }
-      })
-    );
+        })
+      );
+    });
   }
 
-  function openDeleteConfirmation(editorSlot, field) {
+  function openEditEditor(editorSlot, editorTransition, field) {
+    editorTransition.replace(() => {
+      editorSlot.replaceChildren(
+        createFieldEditor({
+          field,
+          onCancel: () => editorTransition.replace(() => editorSlot.replaceChildren()),
+          onSave: (values) => {
+            assertUniqueDisplayName(values.displayName, field.id);
+            if (field.stagedKind === FIELD_CHANGE_KINDS.add) {
+              changeSet.updateDraft(field.id, values);
+            } else {
+              changeSet.stageUpdate(field.id, values);
+            }
+            renderWorkspace();
+          }
+        })
+      );
+    });
+  }
+
+  function openDeleteConfirmation(editorSlot, editorTransition, field) {
     const confirmation = createElement("div", { className: "field-delete-confirmation" });
     const actions = createElement("div", { className: "form-actions" });
     const cancelButton = createButton("Cancel");
@@ -222,34 +235,38 @@ export function createFieldManager({ fieldManagement, goodsTypes, mutationContro
         textContent: "This is a soft deletion. Existing item values are preserved for future restoration."
       })
     );
-    cancelButton.addEventListener("click", () => editorSlot.replaceChildren());
+    cancelButton.addEventListener("click", () => {
+      editorTransition.replace(() => editorSlot.replaceChildren());
+    });
     deleteButton.addEventListener("click", () => {
       changeSet.stageDelete(field.id);
       renderWorkspace();
     });
     actions.append(cancelButton, deleteButton);
     confirmation.append(actions);
-    editorSlot.replaceChildren(confirmation);
+    editorTransition.replace(() => editorSlot.replaceChildren(confirmation));
   }
 
   function renderReview() {
     const changes = changeSet.getChanges();
 
-    container.replaceChildren(
-      createFieldChangeReview({
-        baseFields,
-        changes,
-        fieldManagement,
-        goodsTypeId: selectedGoodsTypeId,
-        mutationController,
-        onApplied: async () => {
-          baseFields = await fieldManagement.listFields(selectedGoodsTypeId);
-          changeSet = createFieldChangeSet(baseFields);
-          renderWorkspace("Field changes applied.");
-        },
-        onBack: () => renderWorkspace()
-      })
-    );
+    contentTransition.replace(() => {
+      container.replaceChildren(
+        createFieldChangeReview({
+          baseFields,
+          changes,
+          fieldManagement,
+          goodsTypeId: selectedGoodsTypeId,
+          mutationController,
+          onApplied: async () => {
+            baseFields = await fieldManagement.listFields(selectedGoodsTypeId);
+            changeSet = createFieldChangeSet(baseFields);
+            renderWorkspace("Field changes applied.");
+          },
+          onBack: () => renderWorkspace()
+        })
+      );
+    });
   }
 
   renderLanding();

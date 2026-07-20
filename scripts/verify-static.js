@@ -197,6 +197,17 @@ function verifyMotionDurations() {
     }
   });
 
+  const phaseMatch = stylesheet.match(/--motion-phase:\s*([\d.]+)(ms|s)\s*;/);
+
+  if (
+    !phaseMatch ||
+    toMilliseconds(phaseMatch[1], phaseMatch[2]) * 2 > MAX_MOTION_DURATION_MS
+  ) {
+    throw new Error(
+      `Two content motion phases combined must be at most ${MAX_MOTION_DURATION_MS}ms.`
+    );
+  }
+
   const fallbackMatch = config.match(/fastFallbackMs:\s*(\d+)/);
 
   if (!fallbackMatch || Number.parseInt(fallbackMatch[1], 10) > MAX_MOTION_DURATION_MS) {

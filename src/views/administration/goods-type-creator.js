@@ -1,4 +1,5 @@
 import { BUILT_IN_ITEM_FIELDS } from "../../data/models/built-in-fields.js";
+import { createContentTransition } from "../../shared/content-transition.js";
 import { createElement } from "../../shared/dom.js";
 import { createMetaList, createSchemaTable } from "../../shared/ui-components.js";
 
@@ -80,6 +81,7 @@ export function createGoodsTypeCreator({
     attributes: { "aria-label": "Create goods type" },
     className: "goods-type-creator"
   });
+  const contentTransition = createContentTransition(container);
 
   function renderLanding() {
     const copy = createElement("div");
@@ -93,8 +95,11 @@ export function createGoodsTypeCreator({
       })
     );
     addButton.addEventListener("click", renderEditor);
-    container.replaceChildren(copy, addButton);
-    container.className = "goods-type-creator creator-landing";
+    contentTransition.replace(() => {
+      container.classList.add("creator-landing");
+      container.classList.remove("creator-workflow");
+      container.replaceChildren(copy, addButton);
+    });
   }
 
   function renderEditor(draft = { description: "", displayName: "" }) {
@@ -170,9 +175,14 @@ export function createGoodsTypeCreator({
       feedback,
       createActions(cancelButton, continueButton)
     );
-    container.replaceChildren(form);
-    container.className = "goods-type-creator creator-workflow";
-    nameField.input.focus();
+    contentTransition.replace(
+      () => {
+        container.classList.remove("creator-landing");
+        container.classList.add("creator-workflow");
+        container.replaceChildren(form);
+      },
+      { afterUpdate: () => nameField.input.focus() }
+    );
   }
 
   function renderReview(draft) {
@@ -267,8 +277,11 @@ export function createGoodsTypeCreator({
     });
 
     review.append(status, createActions(backButton, confirmButton));
-    container.replaceChildren(review);
-    container.className = "goods-type-creator creator-workflow";
+    contentTransition.replace(() => {
+      container.classList.remove("creator-landing");
+      container.classList.add("creator-workflow");
+      container.replaceChildren(review);
+    });
   }
 
   renderLanding();

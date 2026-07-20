@@ -21,6 +21,7 @@
   --nav-child-indent: 18px;
   --focus: #0f766e;
   --radius: 8px;
+  --motion-phase: 80ms;
   --motion-fast: 160ms;
   --motion-enter: 140ms;
   --motion-layout: 180ms;
@@ -539,6 +540,30 @@ textarea {
   }
 }
 
+.content-transition {
+  opacity: 1;
+  transform: translateY(0);
+  transition:
+    opacity var(--motion-phase) ease,
+    transform var(--motion-phase) ease;
+}
+
+.content-transition[data-content-transition="exit"] {
+  opacity: 0;
+  transform: translateY(-2px);
+  pointer-events: none;
+}
+
+.content-transition[data-content-transition="enter"] {
+  opacity: 0;
+  transform: translateY(3px);
+  pointer-events: none;
+}
+
+.content-transition.content-transition-preparing {
+  transition: none;
+}
+
 .topbar {
   display: flex;
   align-items: center;
@@ -836,11 +861,6 @@ textarea {
   border-radius: var(--radius);
 }
 
-.goods-type-creator > *,
-.field-manager > * {
-  animation: content-enter var(--motion-enter) ease-out both;
-}
-
 .creator-landing {
   display: flex;
   align-items: center;
@@ -969,8 +989,7 @@ textarea {
 }
 
 .form-feedback:not(:empty),
-.creation-status:not(:empty),
-.field-manager-success {
+.creation-status:not(:empty) {
   animation: content-enter var(--motion-enter) ease-out both;
 }
 
@@ -1237,7 +1256,6 @@ textarea {
   background: var(--surface-muted);
   border-top: 1px solid var(--line);
   border-bottom: 1px solid var(--line);
-  animation: content-enter var(--motion-enter) ease-out both;
 }
 
 .field-editor,
