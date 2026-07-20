@@ -30,6 +30,7 @@ export function createApp({ storageFactory = createAppStorage } = {}) {
         mutationController,
         onGoodsTypeCreated: (goodsTypeId) =>
           startupCoordinator.refresh({ initialViewId: `goods:${goodsTypeId}` }),
+        onLocalDataReset: () => startupCoordinator.refresh(),
         storage,
         themeController
       }),

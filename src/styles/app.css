@@ -1317,6 +1317,61 @@ textarea {
   outline-offset: 2px;
 }
 
+.danger-action:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
+}
+
+.local-data-reset {
+  width: 100%;
+  min-width: 0;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+.local-data-reset h3,
+.local-data-reset p {
+  margin: 0;
+}
+
+.local-data-reset h3 {
+  font-size: 19px;
+  line-height: 1.25;
+}
+
+.local-data-reset p {
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.local-reset-landing {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 22px 24px;
+}
+
+.local-reset-copy {
+  min-width: 0;
+}
+
+.local-reset-landing .danger-action {
+  flex: 0 0 auto;
+}
+
+.local-reset-workflow {
+  padding: 24px;
+}
+
+.local-reset-confirmation {
+  display: grid;
+  gap: 20px;
+}
+
 .field-stage-footer {
   display: flex;
   flex-wrap: wrap;
@@ -1701,6 +1756,20 @@ textarea {
   }
 
   .creator-workflow {
+    padding: 20px;
+  }
+
+  .local-reset-landing {
+    align-items: stretch;
+    flex-direction: column;
+    padding: 20px;
+  }
+
+  .local-reset-landing .danger-action {
+    align-self: flex-start;
+  }
+
+  .local-reset-workflow {
     padding: 20px;
   }
 

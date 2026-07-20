@@ -46,6 +46,8 @@ Owns storage-neutral use cases that coordinate domain records and adapter calls.
   field definitions, then requests one atomic storage write.
 - `fields/manage-fields.js`: validates staged field changes and converts them into
   field-definition records for one atomic adapter write.
+- `data/reset-local-data.js`: requests one atomic clear of all user-data stores
+  while leaving application metadata and external backups intact.
 
 Application operations may depend on domain models and storage contracts. They
 must not depend on DOM elements, IndexedDB object-store names, or view modules.
@@ -128,7 +130,8 @@ Owns view definitions and view rendering.
 - `view-renderer.js`: renderer registry and markup for placeholder, goods type, administration, and options views.
 - `administration/`: Administration rendering and the goods-type creation flow.
   Its field manager separates staging state, list rendering, editing, review, and
-  orchestration into focused modules.
+  orchestration into focused modules. Destructive local-data reset is isolated in
+  its own typed-confirmation component.
 
 ## View Model
 

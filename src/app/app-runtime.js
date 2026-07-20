@@ -5,6 +5,7 @@ import { createViewDefinitions } from "../views/view-definitions.js";
 import { createViewRenderer } from "../views/view-renderer.js";
 import { createGoodsTypeCreationOperation } from "../application/goods-types/create-goods-type.js";
 import { createFieldManagementOperations } from "../application/fields/manage-fields.js";
+import { createResetLocalDataOperation } from "../application/data/reset-local-data.js";
 
 export function mountAppRuntime({
   elements,
@@ -12,6 +13,7 @@ export function mountAppRuntime({
   initialViewId = APP_CONFIG.defaultViewId,
   mutationController,
   onGoodsTypeCreated,
+  onLocalDataReset,
   storage,
   themeController
 }) {
@@ -22,6 +24,8 @@ export function mountAppRuntime({
     goodsTypes,
     mutationController,
     onGoodsTypeCreated,
+    onLocalDataReset,
+    resetLocalData: createResetLocalDataOperation({ storage }),
     themeController
   });
   let router;

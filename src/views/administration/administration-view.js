@@ -2,6 +2,7 @@ import { createElement } from "../../shared/dom.js";
 import { createSchemaTable, createSettingsSection } from "../../shared/ui-components.js";
 import { createGoodsTypeCreator } from "./goods-type-creator.js";
 import { createFieldManager } from "./field-manager.js";
+import { createLocalDataReset } from "./local-data-reset.js";
 
 const GOODS_TYPE_COLUMNS = Object.freeze([
   { key: "id", label: "ID" },
@@ -14,7 +15,9 @@ export function renderAdministrationView({
   fieldManagement,
   goodsTypes,
   mutationController,
-  onGoodsTypeCreated
+  onGoodsTypeCreated,
+  onLocalDataReset,
+  resetLocalData
 }) {
   const article = createElement("article", {
     className: "settings-view administration-view"
@@ -47,7 +50,12 @@ export function renderAdministrationView({
       onCreated: onGoodsTypeCreated
     }),
     createFieldManager({ fieldManagement, goodsTypes, mutationController }),
-    schemaSection
+    schemaSection,
+    createLocalDataReset({
+      mutationController,
+      onReset: onLocalDataReset,
+      resetLocalData
+    })
   );
 
   return article;

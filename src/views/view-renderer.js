@@ -74,6 +74,8 @@ export function createViewRenderer({
   goodsTypes,
   mutationController,
   onGoodsTypeCreated,
+  onLocalDataReset,
+  resetLocalData,
   themeController
 }) {
   const renderers = {
@@ -82,7 +84,9 @@ export function createViewRenderer({
       fieldManagement,
       goodsTypes,
       mutationController,
-      onGoodsTypeCreated
+      onGoodsTypeCreated,
+      onLocalDataReset,
+      resetLocalData
     }),
     [RENDERERS.goodsType]: (view) => renderGoodsTypeView(view),
     [RENDERERS.goodsTypeChild]: (view) => renderGoodsTypeChildView(view),
