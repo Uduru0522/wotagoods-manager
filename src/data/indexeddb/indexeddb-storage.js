@@ -43,6 +43,11 @@ export function createIndexedDbStorage({
     return goodsTypeRepository.list(options);
   }
 
+  async function createGoodsType(bundle) {
+    assertInitialized();
+    return goodsTypeRepository.create(bundle);
+  }
+
   function close() {
     database?.close();
     database = null;
@@ -51,6 +56,7 @@ export function createIndexedDbStorage({
 
   return {
     close,
+    createGoodsType,
     initialize,
     listGoodsTypes
   };

@@ -141,3 +141,40 @@ test("DebugStorage hides soft-deleted goods types by default", async () => {
   );
   assert.equal((await storage.listGoodsTypes({ includeDeleted: true })).length, 2);
 });
+
+test("DebugStorage creates goods types in memory without partial invalid writes", async () => {
+  const storage = createDebugStorage({ goodsTypes: [] });
+  const goodsType = createGoodsTypeRecord(
+    { id: "figures", displayName: "Figures" },
+    { now: () => FIXED_TIME }
+  );
+  const field = {
+    id: "figures-name",
+    goodsTypeId: "figures",
+    key: "name",
+    displayName: "Name",
+    dataType: "text",
+    isRequired: true,
+    isBuiltIn: true,
+    position: 0,
+    defaultValue: null,
+    options: null,
+    isDeleted: false,
+    deletedAt: null,
+    createdAt: FIXED_TIME,
+    updatedAt: FIXED_TIME
+  };
+
+  await storage.initialize();
+  await storage.createGoodsType({ goodsType, fieldDefinitions: [field] });
+
+  assert.deepEqual((await storage.listGoodsTypes()).map(({ id }) => id), ["figures"]);
+  await assert.rejects(
+    storage.createGoodsType({
+      goodsType: { ...goodsType, id: "posters", displayName: "Posters" },
+      fieldDefinitions: [{ ...field, id: "posters-name", goodsTypeId: "wrong" }]
+    }),
+    (error) => error.code === STORAGE_ERROR_CODES.invalidData
+  );
+  assert.deepEqual((await storage.listGoodsTypes()).map(({ id }) => id), ["figures"]);
+});

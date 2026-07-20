@@ -75,6 +75,91 @@ function createReadDatabase(records, { transactionError } = {}) {
   };
 }
 
+function createWriteDatabase({ failAt = -1 } = {}) {
+  const writes = [];
+  const transactions = [];
+
+  return {
+    transaction(storeNames, mode) {
+      const requests = [];
+      const transaction = {
+        error: null,
+        objectStore(storeName) {
+          return {
+            add(record) {
+              const request = {};
+              requests.push({ record, request, storeName });
+
+              if (requests.length === 1) {
+                setTimeout(() => {
+                  const failedRequest = requests[failAt];
+
+                  if (failedRequest) {
+                    const failure = new Error("write failed");
+                    transaction.error = failure;
+                    failedRequest.request.error = failure;
+                    failedRequest.request.onerror();
+                    transaction.onabort();
+                    return;
+                  }
+
+                  requests.forEach(({ record: queuedRecord, request: queuedRequest, storeName: queuedStore }) => {
+                    writes.push({ record: queuedRecord, storeName: queuedStore });
+                    queuedRequest.result = queuedRecord.id;
+                    queuedRequest.onsuccess();
+                  });
+                  transaction.oncomplete();
+                }, 0);
+              }
+
+              return request;
+            }
+          };
+        }
+      };
+
+      transactions.push({ mode, storeNames });
+      return transaction;
+    },
+    transactions,
+    writes
+  };
+}
+
+function createGoodsTypeBundle() {
+  const timestamp = "2026-07-20T00:00:00.000Z";
+
+  return {
+    goodsType: {
+      id: "figures",
+      displayName: "Figures",
+      description: "",
+      isDeleted: false,
+      deletedAt: null,
+      createdAt: timestamp,
+      updatedAt: timestamp
+    },
+    fieldDefinitions: [
+      {
+        id: "figures-name",
+        goodsTypeId: "figures",
+        key: "name",
+        displayName: "Name",
+        dataType: "text",
+        isRequired: true,
+        isBuiltIn: true,
+        position: 0,
+        defaultValue: null,
+        options: null,
+        isDeleted: false,
+        deletedAt: null,
+        createdAt: timestamp,
+        updatedAt: timestamp
+      }
+    ]
+  };
+}
+
 test("version 1 schema creates stable stores, indexes, and metadata", () => {
   const database = createFakeDatabase();
 
@@ -308,4 +393,47 @@ test("goods type repository translates transaction failures", async () => {
     (error) =>
       error instanceof StorageError && error.code === STORAGE_ERROR_CODES.operationFailed
   );
+});
+
+test("goods type repository writes the type and fields in one transaction", async () => {
+  const database = createWriteDatabase();
+  const repository = createGoodsTypeRepository(database);
+
+  await repository.create(createGoodsTypeBundle());
+
+  assert.deepEqual(database.transactions, [
+    {
+      mode: "readwrite",
+      storeNames: [OBJECT_STORES.goodsTypes, OBJECT_STORES.fieldDefinitions]
+    }
+  ]);
+  assert.deepEqual(
+    database.writes.map(({ storeName }) => storeName),
+    [OBJECT_STORES.goodsTypes, OBJECT_STORES.fieldDefinitions]
+  );
+});
+
+test("goods type repository reports a failed atomic write", async () => {
+  const database = createWriteDatabase({ failAt: 1 });
+  const repository = createGoodsTypeRepository(database);
+
+  await assert.rejects(
+    repository.create(createGoodsTypeBundle()),
+    (error) =>
+      error instanceof StorageError && error.code === STORAGE_ERROR_CODES.operationFailed
+  );
+  assert.deepEqual(database.writes, []);
+});
+
+test("goods type repository rejects mismatched fields before opening a transaction", async () => {
+  const database = createWriteDatabase();
+  const repository = createGoodsTypeRepository(database);
+  const bundle = createGoodsTypeBundle();
+  bundle.fieldDefinitions[0].goodsTypeId = "another-type";
+
+  await assert.rejects(
+    repository.create(bundle),
+    (error) => error instanceof StorageError && error.code === STORAGE_ERROR_CODES.invalidData
+  );
+  assert.deepEqual(database.transactions, []);
 });

@@ -11,6 +11,7 @@ export const STORAGE_ERROR_CODES = Object.freeze({
 const REQUIRED_STORAGE_METHODS = Object.freeze([
   "initialize",
   "listGoodsTypes",
+  "createGoodsType",
   "close"
 ]);
 

@@ -1,7 +1,8 @@
-const CACHE_NAME = "wotagoods-manager-v50";
+const CACHE_NAME = "wotagoods-manager-v51";
 
 const ASSET_GROUPS = {
   app: [
+    "./src/application/goods-types/create-goods-type.js",
     "./src/app/app-elements.js",
     "./src/app/app-mode.js",
     "./src/app/app-runtime.js",
@@ -30,6 +31,7 @@ const ASSET_GROUPS = {
     "./src/data/indexeddb/goods-type-repository.js",
     "./src/data/indexeddb/indexeddb-storage.js",
     "./src/data/indexeddb/requests.js",
+    "./src/data/models/field-definition.js",
     "./src/data/models/goods-type.js"
   ],
   install: [
