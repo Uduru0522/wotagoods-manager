@@ -1,29 +1,5 @@
-import { createFieldDefinitionRecord } from "../../data/models/field-definition.js";
+import { createBuiltInFieldDefinitions } from "../../data/models/built-in-fields.js";
 import { createGoodsTypeRecord } from "../../data/models/goods-type.js";
-
-export const BUILT_IN_ITEM_FIELDS = Object.freeze([
-  Object.freeze({
-    key: "id",
-    displayName: "ID",
-    dataType: "text",
-    isRequired: true,
-    position: 0
-  }),
-  Object.freeze({
-    key: "name",
-    displayName: "Name",
-    dataType: "text",
-    isRequired: true,
-    position: 1
-  }),
-  Object.freeze({
-    key: "image",
-    displayName: "Image",
-    dataType: "image",
-    isRequired: false,
-    position: 2
-  })
-]);
 
 function defaultIdGenerator() {
   return globalThis.crypto.randomUUID();
@@ -48,17 +24,11 @@ export function createGoodsTypeCreationOperation({
       },
       { now: () => timestamp }
     );
-    const fieldDefinitions = BUILT_IN_ITEM_FIELDS.map((field) =>
-      createFieldDefinitionRecord(
-        {
-          ...field,
-          id: generateId(),
-          goodsTypeId: goodsType.id,
-          isBuiltIn: true
-        },
-        { now: () => timestamp }
-      )
-    );
+    const fieldDefinitions = createBuiltInFieldDefinitions({
+      goodsTypeId: goodsType.id,
+      generateId,
+      now: () => timestamp
+    });
 
     await storage.createGoodsType({ goodsType, fieldDefinitions });
 

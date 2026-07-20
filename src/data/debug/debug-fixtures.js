@@ -1,3 +1,4 @@
+import { createBuiltInFieldDefinitions } from "../models/built-in-fields.js";
 import { createGoodsTypeRecord } from "../models/goods-type.js";
 
 const FIXTURE_TIMESTAMP = "2026-01-01T00:00:00.000Z";
@@ -23,5 +24,15 @@ const GOODS_TYPE_FIXTURES = Object.freeze([
 export function createDebugGoodsTypes() {
   return GOODS_TYPE_FIXTURES.map((record) =>
     createGoodsTypeRecord(record, { now: () => FIXTURE_TIMESTAMP })
+  );
+}
+
+export function createDebugFieldDefinitions(goodsTypes = createDebugGoodsTypes()) {
+  return goodsTypes.flatMap((goodsType) =>
+    createBuiltInFieldDefinitions({
+      goodsTypeId: goodsType.id,
+      generateId: (key) => `${goodsType.id}-${key}`,
+      now: () => FIXTURE_TIMESTAMP
+    })
   );
 }

@@ -2,9 +2,9 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
-  BUILT_IN_ITEM_FIELDS,
   createGoodsTypeCreationOperation
 } from "../../src/application/goods-types/create-goods-type.js";
+import { BUILT_IN_ITEM_FIELDS } from "../../src/data/models/built-in-fields.js";
 import {
   createFieldDefinitionRecord,
   parseFieldDefinitionRecord

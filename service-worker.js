@@ -1,4 +1,4 @@
-const CACHE_NAME = "wotagoods-manager-v52";
+const CACHE_NAME = "wotagoods-manager-v53";
 
 const ASSET_GROUPS = {
   app: [
@@ -32,6 +32,7 @@ const ASSET_GROUPS = {
     "./src/data/indexeddb/goods-type-repository.js",
     "./src/data/indexeddb/indexeddb-storage.js",
     "./src/data/indexeddb/requests.js",
+    "./src/data/models/built-in-fields.js",
     "./src/data/models/field-definition.js",
     "./src/data/models/goods-type.js"
   ],

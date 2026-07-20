@@ -1,4 +1,4 @@
-import { BUILT_IN_ITEM_FIELDS } from "../../application/goods-types/create-goods-type.js";
+import { BUILT_IN_ITEM_FIELDS } from "../../data/models/built-in-fields.js";
 import { createElement } from "../../shared/dom.js";
 import { createMetaList, createSchemaTable } from "../../shared/ui-components.js";
 

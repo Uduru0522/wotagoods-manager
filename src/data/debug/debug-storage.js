@@ -2,13 +2,16 @@ import {
   STORAGE_ERROR_CODES,
   StorageError
 } from "../contracts/storage-contract.js";
-import { createDebugGoodsTypes } from "./debug-fixtures.js";
+import {
+  createDebugFieldDefinitions,
+  createDebugGoodsTypes
+} from "./debug-fixtures.js";
 import { parseFieldDefinitionRecord } from "../models/field-definition.js";
 import { parseGoodsTypeRecord } from "../models/goods-type.js";
 
 export function createDebugStorage({
-  fieldDefinitions = [],
-  goodsTypes = createDebugGoodsTypes()
+  goodsTypes = createDebugGoodsTypes(),
+  fieldDefinitions = createDebugFieldDefinitions(goodsTypes)
 } = {}) {
   const records = goodsTypes.map(parseGoodsTypeRecord);
   const fieldRecords = fieldDefinitions.map(parseFieldDefinitionRecord);
