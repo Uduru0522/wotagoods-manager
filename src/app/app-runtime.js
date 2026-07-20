@@ -4,6 +4,7 @@ import { createNavigation } from "../navigation/navigation.js";
 import { createViewDefinitions } from "../views/view-definitions.js";
 import { createViewRenderer } from "../views/view-renderer.js";
 import { createGoodsTypeCreationOperation } from "../application/goods-types/create-goods-type.js";
+import { createFieldManagementOperations } from "../application/fields/manage-fields.js";
 
 export function mountAppRuntime({
   elements,
@@ -17,6 +18,7 @@ export function mountAppRuntime({
   const views = createViewDefinitions(goodsTypes);
   const renderer = createViewRenderer({
     createGoodsType: createGoodsTypeCreationOperation({ storage }),
+    fieldManagement: createFieldManagementOperations({ storage }),
     goodsTypes,
     mutationController,
     onGoodsTypeCreated,

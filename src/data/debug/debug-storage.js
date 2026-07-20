@@ -84,6 +84,60 @@ export function createDebugStorage({
     return structuredClone(parsedGoodsType);
   }
 
+  async function listFieldDefinitions(goodsTypeId, { includeDeleted = false } = {}) {
+    assertInitialized();
+
+    const matchingFields = fieldRecords
+      .filter((field) => field.goodsTypeId === goodsTypeId)
+      .filter((field) => includeDeleted || !field.isDeleted)
+      .sort(
+        (left, right) =>
+          left.position - right.position || left.createdAt.localeCompare(right.createdAt)
+      );
+
+    return structuredClone(matchingFields);
+  }
+
+  async function saveFieldDefinitions({ goodsTypeId, fieldDefinitions: changedFields }) {
+    assertInitialized();
+
+    let parsedFields;
+
+    try {
+      parsedFields = changedFields.map(parseFieldDefinitionRecord);
+
+      if (parsedFields.some((field) => field.goodsTypeId !== goodsTypeId)) {
+        throw new TypeError("A field definition belongs to a different goods type.");
+      }
+    } catch (error) {
+      throw new StorageError("The field-definition write contains invalid data.", {
+        cause: error,
+        code: STORAGE_ERROR_CODES.invalidData
+      });
+    }
+
+    const changedIds = new Set(parsedFields.map(({ id }) => id));
+    const resultingFields = [
+      ...fieldRecords.filter(({ id }) => !changedIds.has(id)),
+      ...parsedFields
+    ];
+    const activeKeys = resultingFields
+      .filter((field) => field.goodsTypeId === goodsTypeId && !field.isDeleted)
+      .map(({ key }) => key);
+
+    if (
+      changedIds.size !== parsedFields.length ||
+      new Set(activeKeys).size !== activeKeys.length
+    ) {
+      throw new StorageError("Field changes contain duplicate identity.", {
+        code: STORAGE_ERROR_CODES.operationFailed
+      });
+    }
+
+    fieldRecords.splice(0, fieldRecords.length, ...resultingFields);
+    return structuredClone(parsedFields);
+  }
+
   function close() {
     isInitialized = false;
   }
@@ -92,6 +146,8 @@ export function createDebugStorage({
     close,
     createGoodsType,
     initialize,
-    listGoodsTypes
+    listFieldDefinitions,
+    listGoodsTypes,
+    saveFieldDefinitions
   };
 }

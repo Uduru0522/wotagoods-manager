@@ -5,6 +5,7 @@ import {
 import { DATABASE_NAME } from "./database-schema.js";
 import { openDatabase } from "./connection.js";
 import { createGoodsTypeRepository } from "./goods-type-repository.js";
+import { createFieldDefinitionRepository } from "./field-definition-repository.js";
 
 export function createIndexedDbStorage({
   databaseName = DATABASE_NAME,
@@ -12,10 +13,11 @@ export function createIndexedDbStorage({
 } = {}) {
   let database = null;
   let goodsTypeRepository = null;
+  let fieldDefinitionRepository = null;
   let initializationPromise = null;
 
   function assertInitialized() {
-    if (!database || !goodsTypeRepository) {
+    if (!database || !goodsTypeRepository || !fieldDefinitionRepository) {
       throw new StorageError("IndexedDB storage has not been initialized.", {
         code: STORAGE_ERROR_CODES.notInitialized
       });
@@ -32,6 +34,7 @@ export function createIndexedDbStorage({
     try {
       database = await initializationPromise;
       goodsTypeRepository = createGoodsTypeRepository(database);
+      fieldDefinitionRepository = createFieldDefinitionRepository(database);
       database.onversionchange = () => close();
     } finally {
       initializationPromise = null;
@@ -48,16 +51,29 @@ export function createIndexedDbStorage({
     return goodsTypeRepository.create(bundle);
   }
 
+  async function listFieldDefinitions(goodsTypeId, options) {
+    assertInitialized();
+    return fieldDefinitionRepository.list(goodsTypeId, options);
+  }
+
+  async function saveFieldDefinitions(changeSet) {
+    assertInitialized();
+    return fieldDefinitionRepository.save(changeSet);
+  }
+
   function close() {
     database?.close();
     database = null;
     goodsTypeRepository = null;
+    fieldDefinitionRepository = null;
   }
 
   return {
     close,
     createGoodsType,
     initialize,
-    listGoodsTypes
+    listFieldDefinitions,
+    listGoodsTypes,
+    saveFieldDefinitions
   };
 }

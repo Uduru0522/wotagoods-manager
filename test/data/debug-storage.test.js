@@ -11,6 +11,7 @@ import {
   createGoodsTypeRecord,
   parseGoodsTypeRecord
 } from "../../src/data/models/goods-type.js";
+import { createFieldDefinitionRecord } from "../../src/data/models/field-definition.js";
 
 const FIXED_TIME = "2026-07-20T00:00:00.000Z";
 
@@ -182,4 +183,42 @@ test("DebugStorage creates goods types in memory without partial invalid writes"
     storage.createGoodsType({ goodsType: { id: "invalid" }, fieldDefinitions: [] }),
     (error) => error instanceof StorageError && error.code === STORAGE_ERROR_CODES.invalidData
   );
+});
+
+test("DebugStorage lists fixture fields and applies isolated field changes", async () => {
+  const storage = createDebugStorage();
+
+  await storage.initialize();
+  const fixtureFields = await storage.listFieldDefinitions("figures");
+
+  assert.deepEqual(fixtureFields.map(({ key }) => key), ["id", "name", "image"]);
+
+  const customField = createFieldDefinitionRecord(
+    {
+      id: "figures-scale",
+      goodsTypeId: "figures",
+      key: "scale",
+      displayName: "Scale",
+      dataType: "text",
+      position: 3
+    },
+    { now: () => FIXED_TIME }
+  );
+  await storage.saveFieldDefinitions({
+    goodsTypeId: "figures",
+    fieldDefinitions: [customField]
+  });
+
+  const firstRead = await storage.listFieldDefinitions("figures");
+  firstRead.at(-1).displayName = "External change";
+  assert.equal((await storage.listFieldDefinitions("figures")).at(-1).displayName, "Scale");
+
+  await assert.rejects(
+    storage.saveFieldDefinitions({
+      goodsTypeId: "figures",
+      fieldDefinitions: [{ ...customField, id: "duplicate", key: "name" }]
+    }),
+    (error) => error.code === STORAGE_ERROR_CODES.operationFailed
+  );
+  assert.equal((await storage.listFieldDefinitions("figures")).length, 4);
 });

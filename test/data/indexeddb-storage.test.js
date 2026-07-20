@@ -17,6 +17,7 @@ import {
   StorageError
 } from "../../src/data/contracts/storage-contract.js";
 import { createGoodsTypeRepository } from "../../src/data/indexeddb/goods-type-repository.js";
+import { createFieldDefinitionRepository } from "../../src/data/indexeddb/field-definition-repository.js";
 
 function createFakeDatabase() {
   const stores = new Map();
@@ -85,35 +86,38 @@ function createWriteDatabase({ failAt = -1 } = {}) {
       const transaction = {
         error: null,
         objectStore(storeName) {
-          return {
-            add(record) {
-              const request = {};
-              requests.push({ record, request, storeName });
+          function queueWrite(record) {
+            const request = {};
+            requests.push({ record, request, storeName });
 
-              if (requests.length === 1) {
-                setTimeout(() => {
-                  const failedRequest = requests[failAt];
+            if (requests.length === 1) {
+              setTimeout(() => {
+                const failedRequest = requests[failAt];
 
-                  if (failedRequest) {
-                    const failure = new Error("write failed");
-                    transaction.error = failure;
-                    failedRequest.request.error = failure;
-                    failedRequest.request.onerror();
-                    transaction.onabort();
-                    return;
-                  }
+                if (failedRequest) {
+                  const failure = new Error("write failed");
+                  transaction.error = failure;
+                  failedRequest.request.error = failure;
+                  failedRequest.request.onerror();
+                  transaction.onabort();
+                  return;
+                }
 
-                  requests.forEach(({ record: queuedRecord, request: queuedRequest, storeName: queuedStore }) => {
-                    writes.push({ record: queuedRecord, storeName: queuedStore });
-                    queuedRequest.result = queuedRecord.id;
-                    queuedRequest.onsuccess();
-                  });
-                  transaction.oncomplete();
-                }, 0);
-              }
-
-              return request;
+                requests.forEach(({ record: queuedRecord, request: queuedRequest, storeName: queuedStore }) => {
+                  writes.push({ record: queuedRecord, storeName: queuedStore });
+                  queuedRequest.result = queuedRecord.id;
+                  queuedRequest.onsuccess();
+                });
+                transaction.oncomplete();
+              }, 0);
             }
+
+            return request;
+          }
+
+          return {
+            add: queueWrite,
+            put: queueWrite
           };
         }
       };
@@ -123,6 +127,44 @@ function createWriteDatabase({ failAt = -1 } = {}) {
     },
     transactions,
     writes
+  };
+}
+
+function createFieldReadDatabase(records, { transactionError } = {}) {
+  const queries = [];
+
+  return {
+    queries,
+    transaction(storeName, mode) {
+      const request = {};
+      const transaction = {
+        error: transactionError,
+        objectStore() {
+          return {
+            index(indexName) {
+              return {
+                getAll(goodsTypeId) {
+                  queries.push({ goodsTypeId, indexName, mode, storeName });
+                  queueMicrotask(() => {
+                    if (transactionError) {
+                      transaction.onerror();
+                      return;
+                    }
+
+                    request.result = records;
+                    request.onsuccess();
+                    transaction.oncomplete();
+                  });
+                  return request;
+                }
+              };
+            }
+          };
+        }
+      };
+
+      return transaction;
+    }
   };
 }
 
@@ -433,6 +475,64 @@ test("goods type repository rejects mismatched fields before opening a transacti
 
   await assert.rejects(
     repository.create(bundle),
+    (error) => error instanceof StorageError && error.code === STORAGE_ERROR_CODES.invalidData
+  );
+  assert.deepEqual(database.transactions, []);
+});
+
+test("field definition repository reads the goods-type index and sorts active fields", async () => {
+  const bundle = createGoodsTypeBundle();
+  const field = bundle.fieldDefinitions[0];
+  const database = createFieldReadDatabase([
+    { ...field, id: "second", key: "second", displayName: "Second", position: 2 },
+    { ...field, id: "first", key: "first", displayName: "First", position: 1 },
+    {
+      ...field,
+      id: "deleted",
+      key: "deleted",
+      displayName: "Deleted",
+      isDeleted: true,
+      deletedAt: field.updatedAt
+    }
+  ]);
+  const repository = createFieldDefinitionRepository(database);
+
+  assert.deepEqual((await repository.list("figures")).map(({ id }) => id), [
+    "first",
+    "second"
+  ]);
+  assert.deepEqual(database.queries, [
+    {
+      goodsTypeId: "figures",
+      indexName: INDEXES.fieldDefinitionsByGoodsType,
+      mode: "readonly",
+      storeName: OBJECT_STORES.fieldDefinitions
+    }
+  ]);
+});
+
+test("field definition repository saves a change set in one transaction", async () => {
+  const database = createWriteDatabase();
+  const repository = createFieldDefinitionRepository(database);
+  const field = createGoodsTypeBundle().fieldDefinitions[0];
+
+  await repository.save({ goodsTypeId: "figures", fieldDefinitions: [field] });
+
+  assert.deepEqual(database.transactions, [
+    { mode: "readwrite", storeNames: OBJECT_STORES.fieldDefinitions }
+  ]);
+  assert.deepEqual(database.writes, [
+    { record: field, storeName: OBJECT_STORES.fieldDefinitions }
+  ]);
+});
+
+test("field definition repository rejects mismatched writes before a transaction", async () => {
+  const database = createWriteDatabase();
+  const repository = createFieldDefinitionRepository(database);
+  const field = createGoodsTypeBundle().fieldDefinitions[0];
+
+  await assert.rejects(
+    repository.save({ goodsTypeId: "other", fieldDefinitions: [field] }),
     (error) => error instanceof StorageError && error.code === STORAGE_ERROR_CODES.invalidData
   );
   assert.deepEqual(database.transactions, []);
