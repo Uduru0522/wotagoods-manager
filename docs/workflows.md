@@ -1,12 +1,12 @@
-# Planned Workflows
+# Workflows
 
-This document specifies future user workflows. None of the mutations below are
-implemented yet. Their data rules come from [Domain Model](data-model.md), and
-their transactions follow [Persistence](persistence.md).
+This document specifies implemented and planned user workflows. Their data rules
+come from [Domain Model](data-model.md), and their transactions follow
+[Persistence](persistence.md).
 
 ## Create Goods Type
 
-The next product milestone adds goods-type creation to Administration.
+Status: implemented.
 
 1. User opens Administration.
 2. User chooses **Add goods type**.
@@ -18,8 +18,12 @@ The next product milestone adds goods-type creation to Administration.
 
 Display names do not need to be globally unique, but the UI should warn when an
 active type already uses the same normalized name. IDs are generated internally.
+User mode persists the result in IndexedDB. Debug mode applies the same workflow
+to temporary in-memory data that disappears when the page reloads.
 
 ## Add Item
+
+Status: planned.
 
 ```mermaid
 flowchart TD
@@ -48,6 +52,8 @@ The draft and cropped image stay in UI memory until confirmation. Allowed crop
 ratios are portrait `1:sqrt(2)` and horizontal `sqrt(2):1`.
 
 ## Manage Fields
+
+Status: planned and the next product milestone.
 
 Use **Manage fields** in visible UI. Do not expose terms such as column, object
 store, or schema migration to ordinary users.

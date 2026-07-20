@@ -26,7 +26,7 @@ order. It describes direction, not a release-date commitment.
 - added browser import-graph and offline-cache verification
 - broadened startup, lifecycle, corruption, and transaction-failure tests
 
-## Current Product Milestone: Goods-Type Creation
+## Completed Goods-Type Creation Milestone
 
 - create goods types from Administration
 - create protected built-in field definitions atomically
@@ -35,15 +35,23 @@ order. It describes direction, not a release-date commitment.
 - retain debug-mode isolation
 - add mutation progress and recoverable failure UI
 
+## Current Product Milestone: Manage Custom Fields
+
+- list active field definitions for a selected goods type
+- add text, number, date, boolean, URL, and select fields
+- stage edits in memory and review them before applying
+- preserve built-in field protections
+- apply each reviewed change set atomically
+- retain staged input after recoverable failures
+
 ## Later Milestones
 
-1. Manage custom fields.
-2. Add items and cropped image assets.
-3. Browse, filter, and edit items.
-4. Restore and purge soft-deleted records.
-5. Export and validated import.
-6. Optional Google Drive snapshots.
-7. Evaluate live synchronization only after conflict semantics exist.
+1. Add items and cropped image assets.
+2. Browse, filter, and edit items.
+3. Restore and purge soft-deleted records.
+4. Export and validated import.
+5. Optional Google Drive snapshots.
+6. Evaluate live synchronization only after conflict semantics exist.
 
 ## Deliberate Non-Goals
 

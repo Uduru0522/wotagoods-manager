@@ -15,12 +15,15 @@ Implemented:
 - user and debug runtime modes
 - versioned IndexedDB schema initialization
 - isolated in-memory debug storage
+- Administration workflow for creating goods types
+- atomic goods-type and protected-field persistence
+- runtime navigation refresh after database changes
 - offline app-shell caching
 - automated static and unit checks
 - GitHub Pages deployment
 
-Goods-type creation, custom fields, item records, and backup transfer are the next
-application features; their contracts are documented but not yet implemented.
+Custom fields, item records, and backup transfer are the next application
+features; their contracts are documented but not yet implemented.
 
 ## Run Locally
 
@@ -69,6 +72,7 @@ separate settings and IndexedDB databases.
 docs/                  Architecture, development, and product design
 icons/                 Installable-app icons
 scripts/               Repository verification scripts
+src/application/       Storage-neutral application operations
 src/app/               Startup, shell behavior, routing, layout
 src/bootstrap/         Scripts that run before first paint
 src/data/              Domain records and storage adapters
@@ -92,7 +96,7 @@ for implementation work are:
 - [Architecture](docs/architecture.md)
 - [Domain Model](docs/data-model.md)
 - [Persistence](docs/persistence.md)
-- [Planned Workflows](docs/workflows.md)
+- [Workflows](docs/workflows.md)
 - [Roadmap](docs/roadmap.md)
 
 ## Contribution Rules

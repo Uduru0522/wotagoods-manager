@@ -1,8 +1,8 @@
 # Domain Model
 
-This document defines the stable application records. The IndexedDB foundation
-exists, but only goods-type reads are implemented. Mutation behavior is specified
-in [Planned Workflows](workflows.md).
+This document defines the stable application records. Goods types and their
+protected built-in field definitions can now be created atomically. Remaining
+mutation behavior is specified in [Workflows](workflows.md).
 
 ## Goals
 
@@ -119,6 +119,9 @@ url
 select
 ```
 
+`image` is an internal type used by the protected built-in image field. It is
+not offered as a general custom-field type in the first field manager.
+
 Deferred types:
 
 ```text
@@ -141,8 +144,10 @@ editable. `position` gives forms and details deterministic field order.
 | `image` | No | Yes | No |
 
 `createdAt`, `updatedAt`, `isDeleted`, and `deletedAt` are system properties.
-Built-in field records may be stored so renderers can process all fields through
-one path, but domain validation must enforce their protected behavior.
+Goods-type creation stores all three built-in field records so future renderers
+can process built-in and custom fields through one path. The creation operation
+sets their protected metadata; future field-management operations must reject
+changes that violate these rules.
 
 ## Item And Custom Values
 

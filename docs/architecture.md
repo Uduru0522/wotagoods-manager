@@ -9,12 +9,16 @@ real forms, and item views are added.
 1. `index.html` loads `src/bootstrap/theme-bootstrap.js` before CSS. This applies the saved theme before first paint and prevents a light-mode flash.
 2. `index.html` loads `src/styles/app.css`.
 3. `src/main.js` imports `src/app/app-shell.js`.
-4. `createApp()` creates the runtime mode, shell services, and startup coordinator.
+4. `createApp()` creates the runtime mode, shell services, mutation controller,
+   and startup coordinator.
 5. `start()` initializes theme and shell behavior, selects the storage adapter,
    awaits storage initialization and goods-type loading, then creates views,
    navigation, and the router.
 6. Startup storage failures render a retryable state instead of being interpreted
    as an empty collection.
+7. Successful mutations ask the startup coordinator to reload goods types from
+   the active adapter and rebuild data-dependent navigation without reopening the
+   database.
 
 ## Module Boundaries
 
@@ -28,10 +32,21 @@ Owns application assembly and app-level behavior.
 - `app-mode.js`: user/debug mode detection.
 - `config.js`: shared constants for selectors, theme, layout, and defaults.
 - `layout-transition.js`: wide/narrow breakpoint transition state.
+- `mutation-controller.js`: one global database-mutation lock and busy state.
 - `startup-state.js`: storage loading and recoverable startup-error rendering.
 - `startup-coordinator.js`: storage lifecycle, retries, and race-safe mounting.
 - `view-router.js`: active view switching, title updates, and view transition timing.
 - `view-scroll-state.js`: compact title-bar state based on view scroll position.
+
+### `src/application/`
+
+Owns storage-neutral use cases that coordinate domain records and adapter calls.
+
+- `goods-types/create-goods-type.js`: constructs one goods type and its protected
+  field definitions, then requests one atomic storage write.
+
+Application operations may depend on domain models and storage contracts. They
+must not depend on DOM elements, IndexedDB object-store names, or view modules.
 
 ### `src/bootstrap/`
 
@@ -43,8 +58,8 @@ This duplicates a small part of `src/services/theme.js` on purpose. The service 
 
 ### `src/data/`
 
-Owns domain records, storage contracts, and the current debug adapter. It will
-become the boundary between application operations and persistence.
+Owns domain records, storage contracts, and persistence adapters. It is the
+boundary between application operations and physical browser storage.
 
 - `contracts/`: adapter capabilities and storage error definitions.
 - `create-storage.js`: mode-aware adapter selection.
@@ -52,9 +67,9 @@ become the boundary between application operations and persistence.
 - `indexeddb/`: physical schema, database lifecycle, and persistent adapter.
 - `models/`: domain record construction and validation.
 
-User mode opens the versioned IndexedDB database and currently returns no goods
-types because creation forms are not implemented yet. Debug mode uses hardcoded
-in-memory records and never opens IndexedDB.
+User mode opens the versioned IndexedDB database and persists created goods types.
+Debug mode starts from hardcoded records, accepts the same creation operation in
+memory, and never opens IndexedDB; its changes disappear on reload.
 
 ### `src/navigation/`
 
@@ -106,6 +121,7 @@ Owns view definitions and view rendering.
 - `view-definitions.js`: source of truth for view IDs, titles, sections, nav metadata, and renderer keys.
 - `view-metadata.js`: shared constants for view IDs, nav groups, nav kinds, and renderer keys.
 - `view-renderer.js`: renderer registry and markup for placeholder, goods type, administration, and options views.
+- `administration/`: Administration rendering and the goods-type creation flow.
 
 ## View Model
 
@@ -152,7 +168,7 @@ also keeps versioned file import/export and a future Google Drive snapshot adapt
 independent from UI components.
 
 See `docs/data-model.md` for domain records, `docs/persistence.md` for object
-stores and transaction rules, and `docs/workflows.md` for planned mutations.
+stores and transaction rules, and `docs/workflows.md` for mutation behavior.
 
 ### Persistence Integration Constraints
 
@@ -162,10 +178,11 @@ data-dependent views and navigation. Startup renders an explicit loading state
 and a recoverable storage-error state rather than silently treating a failed
 database as an empty collection.
 
-Mutation coordination belongs at application level. Individual views request a
-domain operation; they do not open transactions or independently manage global
-busy state. Storage adapters are responsible for atomic writes and return plain
-records or domain errors.
+Mutation coordination belongs at application level. Individual views request an
+application operation; they do not open transactions or independently manage
+global busy state. `mutation-controller.js` prevents overlapping writes while
+storage adapters provide transaction atomicity and return plain records or
+domain errors.
 
 ## Service Worker
 

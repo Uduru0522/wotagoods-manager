@@ -1,7 +1,7 @@
 # Persistence
 
-This document describes the current IndexedDB foundation and the boundaries that
-future mutations must preserve.
+This document describes the current IndexedDB implementation and the boundaries
+that future mutations must preserve.
 
 ## Runtime Adapters
 
@@ -14,8 +14,8 @@ Both implement the contract in `src/data/contracts/storage-contract.js` and
 return plain domain records. Views must not receive `IDBRequest`,
 `IDBTransaction`, object-store names, or browser storage events.
 
-Debug mode uses cloned fixtures and never opens IndexedDB. User mode never falls
-back to debug data when storage fails.
+Debug mode uses cloned fixtures and performs writes only in memory. It never opens
+IndexedDB. User mode never falls back to debug data when storage fails.
 
 ## Database Identity
 
@@ -47,11 +47,13 @@ Implemented capabilities:
 ```text
 initialize
 listGoodsTypes
+createGoodsType
 close
 ```
 
-The contract grows only when a domain operation needs it. Planned capabilities
-include goods-type writes, field changes, item writes with optional assets, and
+`createGoodsType` accepts a validated goods-type record and its field definitions.
+The contract grows only when an application operation needs it. Planned
+capabilities include field changes, item writes with optional assets, and
 versioned transfer operations. Do not add speculative adapter methods.
 
 ## Transactions
@@ -62,12 +64,16 @@ before the transaction begins.
 
 Examples:
 
+- creating a goods type uses one `goods_types` + `field_definitions` transaction
 - creating an item and its image uses one `assets` + `items` transaction
 - applying field changes uses one `field_definitions` transaction
 - future type-changing field migrations include `items` in the same transaction
 
 Application-level busy state prevents conflicting UI operations. IndexedDB
 transaction atomicity protects committed data.
+
+The debug adapter performs all validation and duplicate checks before mutating
+its arrays, preserving the same all-or-nothing behavior without persistence.
 
 ## Errors
 
@@ -128,7 +134,8 @@ separate, resumable migration design.
 ## Source Ownership
 
 ```text
-src/data/contracts/    Adapter contract and domain storage errors
+src/application/       Storage-neutral operations that request adapter writes
+src/data/contracts/    Adapter contract and storage errors
 src/data/debug/        In-memory fixtures and debug adapter
 src/data/indexeddb/    Schema, connection, requests, repositories, adapter
 src/data/models/       Domain record construction and validation

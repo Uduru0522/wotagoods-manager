@@ -37,6 +37,13 @@ After runtime or layout changes, start the server and verify:
 - `http://localhost:4173`
 - `http://localhost:4173?debug=1`
 
+For persistence changes, create a goods type in each mode and reload:
+
+- user-mode goods types must remain after reload
+- debug-mode goods types must return to the fixtures after reload
+- successful creation must open the new goods-type view
+- a duplicate display name may warn but must not be blocked
+
 ## Browser Storage
 
 Settings are stored in browser `localStorage`, not in project files.
@@ -61,8 +68,8 @@ localStorage.getItem("wotagoods.theme")
 localStorage.removeItem("wotagoods.theme")
 ```
 
-Collection data uses IndexedDB, not `localStorage`. User mode initializes the
-database even while it contains no records. Debug mode uses a separate in-memory
+Collection data uses IndexedDB, not `localStorage`. User mode persists goods-type
+creation in the browser database. Debug mode uses a separate writable in-memory
 adapter and never opens or writes the user database.
 
 Browser storage is origin-specific. These locations do not share settings or
@@ -153,6 +160,6 @@ Docs are not currently cached by the service worker.
 
 - `docs/data-model.md`: domain records and invariants
 - `docs/persistence.md`: adapters, physical schema, and transaction rules
-- `docs/workflows.md`: planned mutation UX
+- `docs/workflows.md`: implemented and planned mutation UX
 - `docs/data-portability.md`: export, import, and cloud snapshots
 - `docs/roadmap.md`: current and upcoming milestones

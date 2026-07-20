@@ -18,7 +18,7 @@ document should state whether it describes implemented code or a future contract
 | --- | --- |
 | [Domain Model](data-model.md) | Stable records, relationships, built-in fields, and deletion rules |
 | [Persistence](persistence.md) | IndexedDB schema, adapters, transactions, errors, and migrations |
-| [Planned Workflows](workflows.md) | Goods-type, field-management, and item-entry behavior |
+| [Workflows](workflows.md) | Implemented and planned goods-management workflows |
 | [Data Portability](data-portability.md) | Export, import, backup, and optional Google Drive snapshots |
 
 ## Documentation Rules
