@@ -12,7 +12,7 @@ export const NAV_KINDS = {
 export const RENDERERS = {
   administration: "administration",
   goodsType: "goodsType",
-  goodsTypeChild: "goodsTypeChild",
+  goodsTypeItems: "goodsTypeItems",
   options: "options",
   placeholder: "placeholder"
 };

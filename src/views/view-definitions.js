@@ -18,45 +18,18 @@ function createGoodsTypeViews(goodsTypes) {
     },
     {
       id: `goods:${goodsType.id}:items`,
-      label: "Item details",
+      label: "Items",
       icon: "items",
       section: goodsType.displayName,
-      title: `${goodsType.displayName} item details`,
-      renderer: RENDERERS.goodsTypeChild,
+      title: `${goodsType.displayName} items`,
+      renderer: RENDERERS.goodsTypeItems,
       nav: {
         group: NAV_GROUPS.primary,
         kind: NAV_KINDS.goodsChild,
         parentId: `goods:${goodsType.id}`
       },
       goodsTypeId: goodsType.id,
-      goodsType,
-      action: "items",
-      content: {
-        heading: `Browse and edit ${goodsType.displayName.toLowerCase()}.`,
-        description:
-          "This view will provide item listing, filtering, and editing for the selected goods type."
-      }
-    },
-    {
-      id: `goods:${goodsType.id}:add`,
-      label: "Add item",
-      icon: "add",
-      section: goodsType.displayName,
-      title: `Add ${goodsType.displayName} item`,
-      renderer: RENDERERS.goodsTypeChild,
-      nav: {
-        group: NAV_GROUPS.primary,
-        kind: NAV_KINDS.goodsChild,
-        parentId: `goods:${goodsType.id}`
-      },
-      goodsTypeId: goodsType.id,
-      goodsType,
-      action: "add",
-      content: {
-        heading: `Register a new ${goodsType.displayName.toLowerCase()} item.`,
-        description:
-          "This view will build its form from the fields configured for the selected goods type."
-      }
+      goodsType
     }
   ]);
 }

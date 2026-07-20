@@ -12,6 +12,10 @@ const ICON_PATHS = {
     "M12 5v14",
     "M5 12h14"
   ],
+  close: [
+    "M6 6l12 12",
+    "M18 6 6 18"
+  ],
   delete: [
     "M3 6h18",
     "M8 6V4h8v2",
