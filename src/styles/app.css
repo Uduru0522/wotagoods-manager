@@ -21,7 +21,8 @@
   --nav-child-indent: 18px;
   --focus: #0f766e;
   --radius: 8px;
-  --motion-fast: 350ms;
+  --motion-fast: 160ms;
+  --motion-enter: 140ms;
   --motion-layout: 180ms;
   --font-ui: Inter, "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
 }
@@ -333,7 +334,12 @@ textarea {
   transition:
     background-color var(--motion-fast) ease,
     border-color var(--motion-fast) ease,
-    color var(--motion-fast) ease;
+    color var(--motion-fast) ease,
+    transform var(--motion-fast) ease;
+}
+
+.nav-item:active:not(:disabled) {
+  transform: translateY(1px);
 }
 
 .nav-item:hover {
@@ -521,6 +527,18 @@ textarea {
   }
 }
 
+@keyframes content-enter {
+  from {
+    opacity: 0.72;
+    transform: translateY(3px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .topbar {
   display: flex;
   align-items: center;
@@ -662,6 +680,13 @@ textarea {
   border-radius: var(--radius);
   cursor: pointer;
   font-weight: 700;
+  transition:
+    background-color var(--motion-fast) ease,
+    border-color var(--motion-fast) ease,
+    color var(--motion-fast) ease,
+    filter var(--motion-fast) ease,
+    opacity var(--motion-fast) ease,
+    transform var(--motion-fast) ease;
 }
 
 .primary-action:hover {
@@ -689,6 +714,19 @@ textarea {
   border-radius: var(--radius);
   cursor: pointer;
   font-weight: 650;
+  transition:
+    background-color var(--motion-fast) ease,
+    border-color var(--motion-fast) ease,
+    color var(--motion-fast) ease,
+    opacity var(--motion-fast) ease,
+    transform var(--motion-fast) ease;
+}
+
+.primary-action:active:not(:disabled),
+.secondary-action:active:not(:disabled),
+.danger-action:active:not(:disabled),
+.field-tool-button:active:not(:disabled) {
+  transform: translateY(1px);
 }
 
 .secondary-action:hover:not(:disabled) {
@@ -796,6 +834,11 @@ textarea {
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--radius);
+}
+
+.goods-type-creator > *,
+.field-manager > * {
+  animation: content-enter var(--motion-enter) ease-out both;
 }
 
 .creator-landing {
@@ -925,6 +968,12 @@ textarea {
   display: none;
 }
 
+.form-feedback:not(:empty),
+.creation-status:not(:empty),
+.field-manager-success {
+  animation: content-enter var(--motion-enter) ease-out both;
+}
+
 .form-feedback,
 .form-error {
   color: #b42318 !important;
@@ -1028,6 +1077,16 @@ textarea {
   background: var(--surface-muted);
   border: 1px solid var(--line-strong);
   border-radius: var(--radius);
+  outline: 0;
+  transition:
+    background-color var(--motion-fast) ease,
+    border-color var(--motion-fast) ease,
+    box-shadow var(--motion-fast) ease;
+}
+
+.field-manager-controls select:focus {
+  border-color: var(--focus);
+  box-shadow: 0 0 0 3px var(--focus-ring);
 }
 
 .field-manager-message,
@@ -1140,6 +1199,12 @@ textarea {
   border: 1px solid transparent;
   border-radius: 6px;
   cursor: pointer;
+  transition:
+    background-color var(--motion-fast) ease,
+    border-color var(--motion-fast) ease,
+    color var(--motion-fast) ease,
+    opacity var(--motion-fast) ease,
+    transform var(--motion-fast) ease;
 }
 
 .field-tool-button:hover:not(:disabled) {
@@ -1172,6 +1237,7 @@ textarea {
   background: var(--surface-muted);
   border-top: 1px solid var(--line);
   border-bottom: 1px solid var(--line);
+  animation: content-enter var(--motion-enter) ease-out both;
 }
 
 .field-editor,
@@ -1214,6 +1280,11 @@ textarea {
   border-radius: var(--radius);
   cursor: pointer;
   font-weight: 700;
+  transition:
+    background-color var(--motion-fast) ease,
+    border-color var(--motion-fast) ease,
+    opacity var(--motion-fast) ease,
+    transform var(--motion-fast) ease;
 }
 
 .danger-action:focus-visible {

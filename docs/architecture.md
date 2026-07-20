@@ -110,6 +110,7 @@ Contains app-wide CSS. `app.css` currently holds design tokens, layout, view sty
 Important tokens:
 
 - `--motion-fast`: fast UI state changes.
+- `--motion-enter`: lightweight feedback when workflow content is replaced.
 - `--motion-layout`: wide/narrow layout settle animation.
 - `--scrollbar-*`: app scrollbar styling.
 - `--focus-ring`: keyboard focus outline color.

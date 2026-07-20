@@ -3,6 +3,7 @@ const path = require("node:path");
 const { spawnSync } = require("node:child_process");
 
 const projectRoot = path.resolve(__dirname, "..");
+const MAX_MOTION_DURATION_MS = 200;
 
 function collectJavaScriptFiles(directory) {
   return fs.readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
@@ -169,6 +170,40 @@ function verifyOfflineModuleCoverage(runtimeModules, serviceWorkerAssets) {
   }
 }
 
+function toMilliseconds(value, unit) {
+  return unit === "s" ? Number.parseFloat(value) * 1000 : Number.parseFloat(value);
+}
+
+function verifyMotionDurations() {
+  const stylesheet = fs.readFileSync(
+    path.join(projectRoot, "src", "styles", "app.css"),
+    "utf8"
+  );
+  const config = fs.readFileSync(path.join(projectRoot, "src", "app", "config.js"), "utf8");
+  const tokenPattern = /--motion-[\w-]+:\s*([\d.]+)(ms|s)\s*;/g;
+  const motionTokens = [...stylesheet.matchAll(tokenPattern)];
+
+  if (motionTokens.length === 0) {
+    throw new Error("No CSS motion timing tokens were found.");
+  }
+
+  motionTokens.forEach((match) => {
+    const durationMs = toMilliseconds(match[1], match[2]);
+
+    if (durationMs > MAX_MOTION_DURATION_MS) {
+      throw new Error(
+        `${match[0].trim()} exceeds the ${MAX_MOTION_DURATION_MS}ms motion limit.`
+      );
+    }
+  });
+
+  const fallbackMatch = config.match(/fastFallbackMs:\s*(\d+)/);
+
+  if (!fallbackMatch || Number.parseInt(fallbackMatch[1], 10) > MAX_MOTION_DURATION_MS) {
+    throw new Error(`View motion fallback must be at most ${MAX_MOTION_DURATION_MS}ms.`);
+  }
+}
+
 try {
   verifyJavaScriptSyntax();
   verifyDocumentAssets();
@@ -176,6 +211,7 @@ try {
   verifyManifestAssets();
   const serviceWorkerAssets = verifyServiceWorkerAssets();
   verifyOfflineModuleCoverage(runtimeModules, serviceWorkerAssets);
+  verifyMotionDurations();
   console.log("Static app verification passed.");
 } catch (error) {
   console.error(error.message);

@@ -6,7 +6,7 @@ export const APP_CONFIG = {
     transitionDurationMs: 180
   },
   motion: {
-    fastFallbackMs: 350
+    fastFallbackMs: 160
   },
   serviceWorkerPath: "service-worker.js",
   selectors: {
