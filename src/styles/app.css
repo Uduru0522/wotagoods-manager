@@ -1108,9 +1108,16 @@ textarea {
   box-shadow: 0 0 0 3px var(--focus-ring);
 }
 
+.field-manager-message {
+  margin: 0 24px 22px !important;
+}
+
+.field-manager-success {
+  margin: 0 !important;
+}
+
 .field-manager-message,
 .field-manager-success {
-  margin: 0 24px 22px !important;
   padding: 10px 12px;
   color: var(--text) !important;
   background: var(--accent-tint);

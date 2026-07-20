@@ -170,10 +170,10 @@ export function createFieldManager({ fieldManagement, goodsTypes, mutationContro
     });
     reviewButton.addEventListener("click", renderReview);
     footer.append(stageStatus, discardButton, reviewButton);
-    workspace.append(header, addButton, list, editorSlot, footer);
+    workspace.append(header);
 
     if (statusMessage) {
-      workspace.prepend(
+      workspace.append(
         createElement("p", {
           attributes: { "aria-live": "polite" },
           className: "field-manager-success",
@@ -181,6 +181,8 @@ export function createFieldManager({ fieldManagement, goodsTypes, mutationContro
         })
       );
     }
+
+    workspace.append(addButton, list, editorSlot, footer);
 
     contentTransition.replace(() => container.replaceChildren(workspace));
   }
