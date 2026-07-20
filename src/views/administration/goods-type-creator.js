@@ -1,13 +1,6 @@
-import { BUILT_IN_ITEM_FIELDS } from "../../data/models/built-in-fields.js";
 import { createContentTransition } from "../../shared/content-transition.js";
 import { createElement } from "../../shared/dom.js";
-import { createMetaList, createSchemaTable } from "../../shared/ui-components.js";
-
-const BUILT_IN_COLUMNS = Object.freeze([
-  { key: "displayName", label: "Field" },
-  { key: "dataType", label: "Type" },
-  { key: "requirement", label: "Requirement" }
-]);
+import { createMetaList } from "../../shared/ui-components.js";
 
 function normalizeDisplayName(value) {
   return value.trim().replace(/\s+/g, " ").toLocaleLowerCase();
@@ -201,7 +194,8 @@ export function createGoodsTypeCreator({
     heading.append(
       createElement("h3", { textContent: "Review goods type" }),
       createElement("p", {
-        textContent: "Confirm these details before writing to the local database."
+        textContent:
+          "Confirm these details before saving. Default fields are added automatically; custom fields can be configured afterward."
       })
     );
     review.append(
@@ -209,15 +203,7 @@ export function createGoodsTypeCreator({
       createMetaList([
         { label: "Display name", value: draft.displayName },
         { label: "Description", value: draft.description || "No description" }
-      ]),
-      createElement("h4", { textContent: "Protected item fields" }),
-      createSchemaTable({
-        columns: BUILT_IN_COLUMNS,
-        rows: BUILT_IN_ITEM_FIELDS.map((field) => ({
-          ...field,
-          requirement: field.isRequired ? "Required" : "Optional"
-        }))
-      })
+      ])
     );
 
     if (similarGoodsType) {
