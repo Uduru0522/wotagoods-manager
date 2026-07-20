@@ -12,12 +12,29 @@ const ICON_PATHS = {
     "M12 5v14",
     "M5 12h14"
   ],
+  delete: [
+    "M3 6h18",
+    "M8 6V4h8v2",
+    "M19 6l-1 14H6L5 6",
+    "M10 11v6",
+    "M14 11v6"
+  ],
+  edit: [
+    "M12 20h9",
+    "M16.5 3.5a2.12 2.12 0 0 1 3 3L8 18l-4 1 1-4 11.5-11.5Z"
+  ],
   goodsType: [
     "M5 7h14",
     "M7 7v12h10V7",
     "M9 11h6",
     "M9 15h4"
   ],
+  lock: [
+    "M6 10h12v10H6V10Z",
+    "M8 10V7a4 4 0 0 1 8 0v3"
+  ],
+  moveDown: ["M6 9l6 6 6-6"],
+  moveUp: ["M18 15l-6-6-6 6"],
   administration: [
     "M12 4l7 4v8l-7 4-7-4V8l7-4Z",
     "M12 8v8",

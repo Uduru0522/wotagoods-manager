@@ -70,6 +70,7 @@ export function renderOptionsView({ themeController }) {
 
 export function createViewRenderer({
   createGoodsType,
+  fieldManagement,
   goodsTypes,
   mutationController,
   onGoodsTypeCreated,
@@ -78,6 +79,7 @@ export function createViewRenderer({
   const renderers = {
     [RENDERERS.administration]: () => renderAdministrationView({
       createGoodsType,
+      fieldManagement,
       goodsTypes,
       mutationController,
       onGoodsTypeCreated

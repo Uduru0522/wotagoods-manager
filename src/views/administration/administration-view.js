@@ -1,6 +1,7 @@
 import { createElement } from "../../shared/dom.js";
 import { createSchemaTable, createSettingsSection } from "../../shared/ui-components.js";
 import { createGoodsTypeCreator } from "./goods-type-creator.js";
+import { createFieldManager } from "./field-manager.js";
 
 const GOODS_TYPE_COLUMNS = Object.freeze([
   { key: "id", label: "ID" },
@@ -10,6 +11,7 @@ const GOODS_TYPE_COLUMNS = Object.freeze([
 
 export function renderAdministrationView({
   createGoodsType,
+  fieldManagement,
   goodsTypes,
   mutationController,
   onGoodsTypeCreated
@@ -44,6 +46,7 @@ export function renderAdministrationView({
       mutationController,
       onCreated: onGoodsTypeCreated
     }),
+    createFieldManager({ fieldManagement, goodsTypes, mutationController }),
     schemaSection
   );
 

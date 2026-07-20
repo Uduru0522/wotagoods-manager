@@ -1,4 +1,4 @@
-const CACHE_NAME = "wotagoods-manager-v54";
+const CACHE_NAME = "wotagoods-manager-v56";
 
 const ASSET_GROUPS = {
   app: [
@@ -63,6 +63,11 @@ const ASSET_GROUPS = {
   ],
   views: [
     "./src/views/administration/administration-view.js",
+    "./src/views/administration/field-change-review.js",
+    "./src/views/administration/field-change-set.js",
+    "./src/views/administration/field-editor.js",
+    "./src/views/administration/field-list.js",
+    "./src/views/administration/field-manager.js",
     "./src/views/administration/goods-type-creator.js",
     "./src/views/view-definitions.js",
     "./src/views/view-metadata.js",

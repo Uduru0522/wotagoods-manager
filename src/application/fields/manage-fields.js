@@ -190,6 +190,15 @@ export function createFieldManagementOperations({
 
         resultingById.set(id, record);
         touchedIds.add(id);
+
+        if (change.position !== undefined) {
+          if (!Number.isSafeInteger(change.position)) {
+            throw new TypeError("Field position must be an integer.");
+          }
+
+          requestedPositions.push({ fieldId: id, position: change.position });
+        }
+
         continue;
       }
 

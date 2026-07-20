@@ -879,6 +879,7 @@ textarea {
 }
 
 .editor-field input,
+.editor-field select,
 .editor-field textarea {
   width: 100%;
   min-width: 0;
@@ -900,6 +901,7 @@ textarea {
 }
 
 .editor-field input:focus,
+.editor-field select:focus,
 .editor-field textarea:focus {
   border-color: var(--focus);
   box-shadow: 0 0 0 3px var(--focus-ring);
@@ -962,6 +964,280 @@ textarea {
   overflow: hidden;
   accent-color: var(--accent);
   border: 0;
+}
+
+.field-manager {
+  width: 100%;
+  min-width: 0;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+.field-manager h3,
+.field-manager h4,
+.field-manager p {
+  margin: 0;
+}
+
+.field-manager h3 {
+  font-size: 19px;
+  line-height: 1.25;
+}
+
+.field-manager h4 {
+  font-size: 16px;
+  line-height: 1.3;
+}
+
+.field-manager p {
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.field-manager-header,
+.field-workspace-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.field-manager-header {
+  padding: 22px 24px 14px;
+}
+
+.field-manager-copy,
+.field-workspace-header > div {
+  min-width: 0;
+}
+
+.field-manager-controls {
+  display: grid;
+  grid-template-columns: minmax(180px, 1fr) auto;
+  gap: 10px;
+  padding: 0 24px 22px;
+}
+
+.field-manager-controls select {
+  min-width: 0;
+  padding: 8px 10px;
+  color: var(--text);
+  background: var(--surface-muted);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+}
+
+.field-manager-message,
+.field-manager-success {
+  margin: 0 24px 22px !important;
+  padding: 10px 12px;
+  color: var(--text) !important;
+  background: var(--accent-tint);
+  border-left: 3px solid var(--accent);
+}
+
+.field-manager-loading {
+  padding: 24px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.field-manager-workspace,
+.field-change-review {
+  display: grid;
+  gap: 18px;
+  padding: 24px;
+}
+
+.field-workspace-header {
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--line);
+}
+
+.field-manager-workspace > .primary-action {
+  justify-self: start;
+}
+
+.field-list {
+  display: grid;
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.field-row {
+  display: grid;
+  grid-template-columns: minmax(160px, 1fr) minmax(150px, auto) auto;
+  gap: 16px;
+  align-items: center;
+  min-width: 0;
+  padding: 12px 14px;
+  border-top: 1px solid var(--line);
+  transition:
+    background-color var(--motion-fast) ease,
+    opacity var(--motion-fast) ease;
+}
+
+.field-row:first-child {
+  border-top: 0;
+}
+
+.field-row.is-add,
+.field-row.is-update {
+  background: var(--accent-tint);
+}
+
+.field-row.is-delete {
+  opacity: 0.58;
+}
+
+.field-row-identity,
+.field-row-metadata {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+  align-items: center;
+  min-width: 0;
+}
+
+.field-row-identity strong {
+  overflow-wrap: anywhere;
+  font-size: 14px;
+}
+
+.field-type-label,
+.field-row-metadata,
+.field-removal-note {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.field-stage-badge {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.field-row-actions {
+  display: flex;
+  gap: 4px;
+  justify-content: flex-end;
+  min-width: 148px;
+}
+
+.field-tool-button {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  flex: 0 0 32px;
+  padding: 0;
+  place-items: center;
+  color: var(--muted);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.field-tool-button:hover:not(:disabled) {
+  color: var(--text);
+  background: var(--surface-muted);
+  border-color: var(--line);
+}
+
+.field-tool-button:focus-visible {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 1px;
+}
+
+.field-tool-button:disabled {
+  cursor: default;
+  opacity: 0.38;
+}
+
+.field-tool-button .nav-svg {
+  width: 16px;
+  height: 16px;
+}
+
+.field-editor-slot:empty {
+  display: none;
+}
+
+.field-editor-slot:not(:empty) {
+  padding: 20px;
+  background: var(--surface-muted);
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+.field-editor,
+.field-delete-confirmation {
+  display: grid;
+  gap: 18px;
+}
+
+.field-required-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  color: var(--text);
+  font-size: 14px;
+}
+
+.field-required-input {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  accent-color: var(--accent);
+}
+
+.field-options-editor {
+  display: grid;
+  gap: 10px;
+}
+
+.existing-options {
+  color: var(--muted);
+  font-size: 12px !important;
+}
+
+.danger-action {
+  min-height: 36px;
+  padding: 8px 14px;
+  color: #ffffff;
+  background: #b42318;
+  border: 1px solid #b42318;
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.danger-action:focus-visible {
+  outline: 3px solid rgba(217, 45, 32, 0.24);
+  outline-offset: 2px;
+}
+
+.field-stage-footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  justify-content: flex-end;
+  padding-top: 2px;
+}
+
+.field-stage-footer > span {
+  margin-right: auto;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.field-change-review .schema-table {
+  min-width: max(620px, 100%);
 }
 
 .schema-table-wrap {
@@ -1330,6 +1606,54 @@ textarea {
 
   .creator-workflow {
     padding: 20px;
+  }
+
+  .field-manager-header,
+  .field-workspace-header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .field-manager-header {
+    padding: 20px 20px 12px;
+  }
+
+  .field-manager-controls {
+    grid-template-columns: 1fr;
+    padding: 0 20px 20px;
+  }
+
+  .field-manager-workspace,
+  .field-change-review {
+    padding: 20px;
+  }
+
+  .field-workspace-header .secondary-action {
+    align-self: flex-start;
+  }
+
+  .field-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px 12px;
+  }
+
+  .field-row-metadata {
+    grid-column: 1;
+  }
+
+  .field-row-actions {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    min-width: 0;
+  }
+
+  .field-editor-slot:not(:empty) {
+    padding: 18px 0;
+  }
+
+  .field-stage-footer > span {
+    width: 100%;
+    margin-right: 0;
   }
 
   .meta-list {
