@@ -3,9 +3,10 @@ import {
   StorageError
 } from "../contracts/storage-contract.js";
 import { createDebugGoodsTypes } from "./debug-fixtures.js";
+import { parseGoodsTypeRecord } from "../models/goods-type.js";
 
 export function createDebugStorage({ goodsTypes = createDebugGoodsTypes() } = {}) {
-  const records = structuredClone(goodsTypes);
+  const records = goodsTypes.map(parseGoodsTypeRecord);
   let isInitialized = false;
 
   function assertInitialized() {

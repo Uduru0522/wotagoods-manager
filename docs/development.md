@@ -28,8 +28,9 @@ Run the complete static and unit-test suite:
 npm run check
 ```
 
-`npm run check` validates JavaScript syntax and referenced static assets, then
-runs the dependency-free `node:test` suite in `test/`.
+`npm run check` validates JavaScript syntax, the browser import graph, referenced
+assets, and offline-cache coverage, then runs the dependency-free `node:test`
+suite in `test/`.
 
 After runtime or layout changes, start the server and verify:
 

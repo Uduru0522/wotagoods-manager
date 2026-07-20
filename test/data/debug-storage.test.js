@@ -7,7 +7,10 @@ import {
   assertStorageAdapter
 } from "../../src/data/contracts/storage-contract.js";
 import { createDebugStorage } from "../../src/data/debug/debug-storage.js";
-import { createGoodsTypeRecord } from "../../src/data/models/goods-type.js";
+import {
+  createGoodsTypeRecord,
+  parseGoodsTypeRecord
+} from "../../src/data/models/goods-type.js";
 
 const FIXED_TIME = "2026-07-20T00:00:00.000Z";
 
@@ -36,6 +39,54 @@ test("createGoodsTypeRecord rejects missing stable identity", () => {
   assert.throws(
     () => createGoodsTypeRecord({ id: "", displayName: "Figures" }),
     /id must be a non-empty string/
+  );
+});
+
+test("parseGoodsTypeRecord rejects inconsistent deletion state", () => {
+  assert.throws(
+    () =>
+      parseGoodsTypeRecord({
+        id: "figures",
+        displayName: "Figures",
+        description: "",
+        isDeleted: false,
+        deletedAt: FIXED_TIME,
+        createdAt: FIXED_TIME,
+        updatedAt: FIXED_TIME
+      }),
+    /deletedAt must be null/
+  );
+});
+
+test("parseGoodsTypeRecord rejects malformed timestamps", () => {
+  assert.throws(
+    () =>
+      parseGoodsTypeRecord({
+        id: "figures",
+        displayName: "Figures",
+        description: "",
+        isDeleted: false,
+        deletedAt: null,
+        createdAt: "not-a-date",
+        updatedAt: FIXED_TIME
+      }),
+    /createdAt must be an ISO 8601 UTC timestamp/
+  );
+});
+
+test("parseGoodsTypeRecord does not normalize persisted text", () => {
+  assert.throws(
+    () =>
+      parseGoodsTypeRecord({
+        id: " figures ",
+        displayName: "Figures",
+        description: "",
+        isDeleted: false,
+        deletedAt: null,
+        createdAt: FIXED_TIME,
+        updatedAt: FIXED_TIME
+      }),
+    /id cannot have leading or trailing whitespace/
   );
 });
 

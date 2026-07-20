@@ -25,6 +25,10 @@ function assertFileExists(relativePath, source) {
   }
 }
 
+function toProjectAssetPath(absolutePath) {
+  return `./${path.relative(projectRoot, absolutePath).split(path.sep).join("/")}`;
+}
+
 function verifyJavaScriptSyntax() {
   const files = [
     ...collectJavaScriptFiles(path.join(projectRoot, "src")),
@@ -52,6 +56,84 @@ function verifyDocumentAssets() {
   }
 }
 
+function getModuleSpecifiers(sourceCode) {
+  const specifiers = [];
+  const staticImportPattern = /\b(?:import|export)\s+(?:[^"'()]*?\s+from\s*)?["']([^"']+)["']/g;
+  const dynamicImportPattern = /\bimport\s*\(\s*["']([^"']+)["']\s*\)/g;
+
+  for (const match of sourceCode.matchAll(staticImportPattern)) {
+    specifiers.push(match[1]);
+  }
+
+  for (const match of sourceCode.matchAll(dynamicImportPattern)) {
+    specifiers.push(match[1]);
+  }
+
+  return specifiers;
+}
+
+function verifyModuleGraph() {
+  const indexHtml = fs.readFileSync(path.join(projectRoot, "index.html"), "utf8");
+  const sourceRoot = `${path.join(projectRoot, "src")}${path.sep}`;
+  const scriptPattern = /<script\b[^>]*\bsrc="(?!https?:)([^"]+)"[^>]*>/g;
+  const pendingFiles = [...indexHtml.matchAll(scriptPattern)].map((match) =>
+    path.resolve(projectRoot, match[1])
+  );
+  const visitedFiles = new Set();
+
+  while (pendingFiles.length > 0) {
+    const filePath = pendingFiles.pop();
+
+    if (visitedFiles.has(filePath)) {
+      continue;
+    }
+
+    if (!fs.existsSync(filePath)) {
+      throw new Error(`Module graph references missing entry: ${toProjectAssetPath(filePath)}`);
+    }
+
+    visitedFiles.add(filePath);
+
+    const sourceCode = fs.readFileSync(filePath, "utf8");
+
+    getModuleSpecifiers(sourceCode).forEach((specifier) => {
+      if (!specifier.startsWith(".")) {
+        return;
+      }
+
+      const cleanSpecifier = specifier.split(/[?#]/, 1)[0];
+      const importedPath = path.resolve(path.dirname(filePath), cleanSpecifier);
+
+      if (!importedPath.startsWith(sourceRoot) || path.extname(importedPath) !== ".js") {
+        throw new Error(
+          `${toProjectAssetPath(filePath)} has unsupported browser import: ${specifier}`
+        );
+      }
+
+      if (!fs.existsSync(importedPath)) {
+        throw new Error(
+          `${toProjectAssetPath(filePath)} imports missing module: ${specifier}`
+        );
+      }
+
+      pendingFiles.push(importedPath);
+    });
+  }
+
+  const sourceFiles = collectJavaScriptFiles(path.join(projectRoot, "src"));
+  const unreachableFiles = sourceFiles.filter((filePath) => !visitedFiles.has(filePath));
+
+  if (unreachableFiles.length > 0) {
+    throw new Error(
+      `Source modules are unreachable from index.html: ${unreachableFiles
+        .map(toProjectAssetPath)
+        .join(", ")}`
+    );
+  }
+
+  return new Set(sourceFiles.map(toProjectAssetPath));
+}
+
 function verifyManifestAssets() {
   const manifest = JSON.parse(
     fs.readFileSync(path.join(projectRoot, "manifest.webmanifest"), "utf8")
@@ -63,19 +145,37 @@ function verifyManifestAssets() {
 function verifyServiceWorkerAssets() {
   const serviceWorker = fs.readFileSync(path.join(projectRoot, "service-worker.js"), "utf8");
   const assetPattern = /"(\.\/[^"\r\n]+)"/g;
+  const assets = new Set();
 
   for (const match of serviceWorker.matchAll(assetPattern)) {
     if (match[1] !== "./") {
       assertFileExists(match[1], "service-worker.js");
+      assets.add(match[1]);
     }
+  }
+
+  return assets;
+}
+
+function verifyOfflineModuleCoverage(runtimeModules, serviceWorkerAssets) {
+  const uncachedModules = [...runtimeModules].filter(
+    (modulePath) => !serviceWorkerAssets.has(modulePath)
+  );
+
+  if (uncachedModules.length > 0) {
+    throw new Error(
+      `Runtime modules are missing from the service-worker cache: ${uncachedModules.join(", ")}`
+    );
   }
 }
 
 try {
   verifyJavaScriptSyntax();
   verifyDocumentAssets();
+  const runtimeModules = verifyModuleGraph();
   verifyManifestAssets();
-  verifyServiceWorkerAssets();
+  const serviceWorkerAssets = verifyServiceWorkerAssets();
+  verifyOfflineModuleCoverage(runtimeModules, serviceWorkerAssets);
   console.log("Static app verification passed.");
 } catch (error) {
   console.error(error.message);

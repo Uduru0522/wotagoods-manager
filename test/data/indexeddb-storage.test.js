@@ -16,6 +16,7 @@ import {
   STORAGE_ERROR_CODES,
   StorageError
 } from "../../src/data/contracts/storage-contract.js";
+import { createGoodsTypeRepository } from "../../src/data/indexeddb/goods-type-repository.js";
 
 function createFakeDatabase() {
   const stores = new Map();
@@ -40,6 +41,37 @@ function createFakeDatabase() {
       return store;
     },
     stores
+  };
+}
+
+function createReadDatabase(records, { transactionError } = {}) {
+  return {
+    transaction() {
+      const request = {};
+      const transaction = {
+        error: transactionError,
+        objectStore() {
+          return {
+            getAll() {
+              queueMicrotask(() => {
+                if (transactionError) {
+                  transaction.onerror();
+                  return;
+                }
+
+                request.result = records;
+                request.onsuccess();
+                transaction.oncomplete();
+              });
+
+              return request;
+            }
+          };
+        }
+      };
+
+      return transaction;
+    }
   };
 }
 
@@ -79,6 +111,77 @@ test("openDatabase reports unavailable IndexedDB", async () => {
   );
 });
 
+test("openDatabase translates synchronous factory failures", async () => {
+  const failure = new Error("open failed");
+
+  await assert.rejects(
+    openDatabase({
+      indexedDBFactory: {
+        open() {
+          throw failure;
+        }
+      }
+    }),
+    (error) =>
+      error instanceof StorageError &&
+      error.code === STORAGE_ERROR_CODES.initializationFailed &&
+      error.cause === failure
+  );
+});
+
+test("openDatabase closes a late connection after a blocked upgrade", async () => {
+  let closeCount = 0;
+  const request = {};
+  const opening = openDatabase({
+    indexedDBFactory: { open: () => request }
+  });
+
+  request.onblocked();
+
+  await assert.rejects(
+    opening,
+    (error) =>
+      error instanceof StorageError && error.code === STORAGE_ERROR_CODES.upgradeBlocked
+  );
+
+  request.result = {
+    close() {
+      closeCount += 1;
+    }
+  };
+  request.onsuccess();
+
+  assert.equal(closeCount, 1);
+});
+
+test("openDatabase aborts a failed schema upgrade", async () => {
+  let abortCount = 0;
+  const request = {
+    result: {
+      createObjectStore() {
+        throw new Error("schema failed");
+      }
+    },
+    transaction: {
+      abort() {
+        abortCount += 1;
+      }
+    }
+  };
+  const opening = openDatabase({
+    indexedDBFactory: { open: () => request }
+  });
+
+  request.onupgradeneeded({ oldVersion: 0 });
+
+  await assert.rejects(
+    opening,
+    (error) =>
+      error instanceof StorageError && error.code === STORAGE_ERROR_CODES.initializationFailed
+  );
+  assert.equal(abortCount, 1);
+});
+
 test("IndexedDbStorage requires initialization before reads", async () => {
   const storage = createIndexedDbStorage({ indexedDBFactory: undefined });
 
@@ -91,6 +194,61 @@ test("IndexedDbStorage requires initialization before reads", async () => {
     storage.initialize(),
     (error) =>
       error instanceof StorageError && error.code === STORAGE_ERROR_CODES.unavailable
+  );
+});
+
+test("IndexedDbStorage shares concurrent initialization and closes on version change", async () => {
+  let closeCount = 0;
+  let openCount = 0;
+  const request = {};
+  const database = {
+    close() {
+      closeCount += 1;
+    },
+    transaction() {
+      const readRequest = {};
+      const transaction = {
+        objectStore() {
+          return {
+            getAll() {
+              queueMicrotask(() => {
+                readRequest.result = [];
+                readRequest.onsuccess();
+                transaction.oncomplete();
+              });
+              return readRequest;
+            }
+          };
+        }
+      };
+      return transaction;
+    }
+  };
+  const storage = createIndexedDbStorage({
+    indexedDBFactory: {
+      open() {
+        openCount += 1;
+        return request;
+      }
+    }
+  });
+  const firstInitialization = storage.initialize();
+  const secondInitialization = storage.initialize();
+
+  request.result = database;
+  request.onsuccess();
+  await Promise.all([firstInitialization, secondInitialization]);
+
+  assert.equal(openCount, 1);
+  assert.deepEqual(await storage.listGoodsTypes(), []);
+
+  database.onversionchange();
+
+  assert.equal(closeCount, 1);
+  await assert.rejects(
+    storage.listGoodsTypes(),
+    (error) =>
+      error instanceof StorageError && error.code === STORAGE_ERROR_CODES.notInitialized
   );
 });
 
@@ -108,4 +266,46 @@ test("requestToPromise resolves and rejects IDB-style requests", async () => {
   failedRequest.onerror();
 
   await assert.rejects(failurePromise, /request failed/);
+});
+
+test("goods type repository validates records before returning them", async () => {
+  const repository = createGoodsTypeRepository(
+    createReadDatabase([
+      {
+        id: "figures",
+        displayName: "Figures",
+        description: "",
+        isDeleted: false,
+        deletedAt: null,
+        createdAt: "2026-07-20T00:00:00.000Z",
+        updatedAt: "2026-07-20T00:00:00.000Z"
+      }
+    ])
+  );
+
+  assert.equal((await repository.list())[0].displayName, "Figures");
+});
+
+test("goods type repository identifies invalid persisted data", async () => {
+  const repository = createGoodsTypeRepository(
+    createReadDatabase([{ id: "broken" }])
+  );
+
+  await assert.rejects(
+    repository.list(),
+    (error) =>
+      error instanceof StorageError && error.code === STORAGE_ERROR_CODES.invalidData
+  );
+});
+
+test("goods type repository translates transaction failures", async () => {
+  const repository = createGoodsTypeRepository(
+    createReadDatabase([], { transactionError: new Error("transaction failed") })
+  );
+
+  await assert.rejects(
+    repository.list(),
+    (error) =>
+      error instanceof StorageError && error.code === STORAGE_ERROR_CODES.operationFailed
+  );
 });

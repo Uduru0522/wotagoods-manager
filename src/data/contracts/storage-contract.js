@@ -1,6 +1,7 @@
 export const STORAGE_ERROR_CODES = Object.freeze({
   initializationFailed: "initialization-failed",
   invalidAdapter: "invalid-adapter",
+  invalidData: "invalid-data",
   notInitialized: "not-initialized",
   operationFailed: "operation-failed",
   unavailable: "unavailable",
