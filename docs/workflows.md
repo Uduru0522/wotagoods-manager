@@ -26,25 +26,25 @@ to temporary in-memory data that disappears when the page reloads.
 Status: planned.
 
 ```mermaid
-flowchart TD
-  A[Open Add item] --> B[Load goods type and active fields]
-  B --> C[Render empty form and required markers]
-  C --> D[Edit form values]
-  D --> E{Add or change image?}
-  E -->|Yes| F[Choose and crop image]
-  F --> G[Keep processed preview in form state]
+graph TD
+  A["Open Add item"] --> B["Load goods type and active fields"]
+  B --> C["Render empty form and required markers"]
+  C --> D["Edit form values"]
+  D --> E{"Add or change image?"}
+  E -->|Yes| F["Choose and crop image"]
+  F --> G["Keep processed preview in form state"]
   G --> D
-  E -->|No| H{Form valid?}
+  E -->|No| H{"Form valid?"}
   H -->|No| D
-  H -->|Yes| I[Open review screen]
-  I --> J{Confirm save?}
+  H -->|Yes| I["Open review screen"]
+  I --> J{"Confirm save?"}
   J -->|No| D
-  J -->|Yes| K[Enter shared mutation state]
-  K --> L[Write asset and item in one transaction]
-  L --> M{Transaction successful?}
-  M -->|Yes| N[Clear draft and show success]
-  M -->|No| O[Keep draft and show recoverable error]
-  N --> P[Leave mutation state]
+  J -->|Yes| K["Enter shared mutation state"]
+  K --> L["Write asset and item in one transaction"]
+  L --> M{"Transaction successful?"}
+  M -->|Yes| N["Clear draft and show success"]
+  M -->|No| O["Keep draft and show recoverable error"]
+  N --> P["Leave mutation state"]
   O --> P
 ```
 
@@ -59,27 +59,27 @@ Use **Manage fields** in visible UI. Do not expose terms such as column, object
 store, or schema migration to ordinary users.
 
 ```mermaid
-flowchart TD
-  A[Open Manage fields] --> B[Choose goods type]
-  B --> C{Choose action}
-  C -->|Add| D[Configure new field]
-  C -->|Modify| E[Edit supported metadata]
-  C -->|Delete| F[Confirm soft deletion]
-  D --> G[Stage change in memory]
+graph TD
+  A["Open Manage fields"] --> B["Choose goods type"]
+  B --> C{"Choose action"}
+  C -->|Add| D["Configure new field"]
+  C -->|Modify| E["Edit supported metadata"]
+  C -->|Delete| F["Confirm soft deletion"]
+  D --> G["Stage change in memory"]
   E --> G
   F --> G
-  G --> H[Review staged changes]
-  H --> I{Apply changes?}
-  I -->|No| J[Discard staged changes]
-  I -->|Yes| K[Validate complete change set]
-  K --> L{Valid?}
+  G --> H["Review staged changes"]
+  H --> I{"Apply changes?"}
+  I -->|No| J["Discard staged changes"]
+  I -->|Yes| K["Validate complete change set"]
+  K --> L{"Valid?"}
   L -->|No| H
-  L -->|Yes| M[Enter shared mutation state]
-  M --> N[Apply records in one transaction]
-  N --> O{Transaction successful?}
-  O -->|Yes| P[Clear staged changes]
-  O -->|No| Q[Keep staged changes and show error]
-  P --> R[Leave mutation state]
+  L -->|Yes| M["Enter shared mutation state"]
+  M --> N["Apply records in one transaction"]
+  N --> O{"Transaction successful?"}
+  O -->|Yes| P["Clear staged changes"]
+  O -->|No| Q["Keep staged changes and show error"]
+  P --> R["Leave mutation state"]
   Q --> R
 ```
 
