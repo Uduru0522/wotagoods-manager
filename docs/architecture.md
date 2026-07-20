@@ -132,6 +132,7 @@ Owns view definitions and view rendering.
   Its field manager separates staging state, list rendering, editing, review, and
   orchestration into focused modules. Destructive local-data reset is isolated in
   its own typed-confirmation component.
+- `items/`: collection item-list views and the modal item-entry workflow.
 
 ## View Model
 
@@ -149,10 +150,10 @@ Goods-type parent views use:
 nav: { group: "primary", kind: "goods-type" }
 ```
 
-Goods-type child views use:
+The Items child view uses:
 
 ```js
-nav: { group: "primary", kind: "goods-child", parentId: goodsType.id }
+nav: { group: "primary", kind: "goods-child", parentId: `goods:${goodsType.id}` }
 ```
 
 Options uses:
