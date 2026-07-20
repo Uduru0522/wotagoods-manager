@@ -122,7 +122,7 @@ export function createDebugStorage({
       ...parsedFields
     ];
     const activeKeys = resultingFields
-      .filter((field) => field.goodsTypeId === goodsTypeId && !field.isDeleted)
+      .filter((field) => field.goodsTypeId === goodsTypeId)
       .map(({ key }) => key);
 
     if (

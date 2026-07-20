@@ -83,6 +83,43 @@ function requireNullableObject(value, fieldName) {
   return requireJsonValue(value, fieldName);
 }
 
+function requireFieldOptions(dataType, value) {
+  if (dataType !== "select") {
+    if (value !== null) {
+      throw new TypeError("options must be null for non-selection fields.");
+    }
+
+    return null;
+  }
+
+  const options = requireNullableObject(value, "options");
+
+  if (!options || !Array.isArray(options.choices) || options.choices.length === 0) {
+    throw new TypeError("Selection fields require at least one option.");
+  }
+
+  const choices = options.choices.map((choice) => {
+    const input = requireRecord(choice);
+
+    return {
+      id: requireCanonicalString(input.id, "option id"),
+      label: requireCanonicalString(input.label, "option label")
+    };
+  });
+  const normalizedLabels = choices.map(({ label }) =>
+    label.replace(/\s+/g, " ").toLocaleLowerCase()
+  );
+
+  if (
+    new Set(choices.map(({ id }) => id)).size !== choices.length ||
+    new Set(normalizedLabels).size !== choices.length
+  ) {
+    throw new TypeError("Selection option IDs and labels must be unique.");
+  }
+
+  return { choices };
+}
+
 function requirePosition(value) {
   if (!Number.isSafeInteger(value) || value < 0) {
     throw new TypeError("position must be a non-negative safe integer.");
@@ -133,7 +170,7 @@ export function parseFieldDefinitionRecord(value) {
     isBuiltIn: requireBoolean(input.isBuiltIn, "isBuiltIn"),
     position: requirePosition(input.position),
     defaultValue: requireJsonValue(input.defaultValue, "defaultValue"),
-    options: requireNullableObject(input.options, "options"),
+    options: requireFieldOptions(dataType, input.options),
     isDeleted,
     deletedAt,
     createdAt,

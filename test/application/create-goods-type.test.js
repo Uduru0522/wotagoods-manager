@@ -43,6 +43,46 @@ test("field definition records normalize creation input and validate persisted d
   );
 });
 
+test("field definition records validate selection option identity", () => {
+  const selection = createFieldDefinitionRecord(
+    {
+      id: "status",
+      goodsTypeId: "figures",
+      key: "status",
+      displayName: "Status",
+      dataType: "select",
+      position: 3,
+      options: {
+        choices: [
+          { id: "owned", label: "Owned" },
+          { id: "ordered", label: "Ordered" }
+        ]
+      }
+    },
+    { now: () => FIXED_TIME }
+  );
+
+  assert.equal(selection.options.choices.length, 2);
+  assert.throws(
+    () =>
+      createFieldDefinitionRecord({
+        ...selection,
+        id: "invalid-status",
+        options: {
+          choices: [
+            { id: "duplicate", label: "Owned" },
+            { id: "duplicate", label: "Owned" }
+          ]
+        }
+      }),
+    /must be unique/
+  );
+  assert.throws(
+    () => createFieldDefinitionRecord({ ...selection, id: "missing-options", options: null }),
+    /require at least one option/
+  );
+});
+
 test("goods-type creation builds the type and protected fields as one storage request", async () => {
   const writes = [];
   const generatedIds = ["goods-id", "field-id", "field-name", "field-image"];
