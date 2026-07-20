@@ -59,6 +59,21 @@ localStorage.getItem("wotagoods.theme")
 localStorage.removeItem("wotagoods.theme")
 ```
 
+Future collection data will use IndexedDB, not `localStorage`. User mode and
+debug mode must use separate storage adapters; debug fixtures must never be
+written to the user database.
+
+Browser storage is origin-specific. These locations do not share settings or
+future IndexedDB data:
+
+```text
+http://localhost:4173/
+https://uduru0522.github.io/wotagoods-manager/
+```
+
+Use versioned export/import to move a collection between origins, browsers, or
+devices. Do not inspect or mutate IndexedDB directly from view modules.
+
 ## Adding A View
 
 1. Add the definition in `src/views/view-definitions.js`.
@@ -72,7 +87,8 @@ Keep route/view IDs stable. They are used by navigation state and router state.
 
 Edit `DEBUG_GOODS_TYPES` in `src/data/goods-types.js`.
 
-Use stable IDs and table names:
+Use stable IDs. `tableName` remains temporary legacy metadata used by current
+placeholder rendering; it will be removed when the storage contract is added:
 
 ```js
 {
@@ -83,7 +99,9 @@ Use stable IDs and table names:
 }
 ```
 
-This is only debug data. The future database implementation should replace `loadDatabaseGoodsTypes()`.
+This is only debug data. The persistence milestone will move these fixtures into
+an in-memory `DebugStorage` adapter and replace the temporary direct loader at the
+application composition root.
 
 ## Theme Rules
 

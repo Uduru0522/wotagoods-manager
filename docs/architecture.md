@@ -34,11 +34,16 @@ This duplicates a small part of `src/services/theme.js` on purpose. The service 
 
 ### `src/data/`
 
-Owns data boundaries and schema-shaped metadata.
+Currently owns debug goods-type metadata. It will become the boundary between
+application operations and persistence.
 
-- `goods-types.js`: debug goods-type records, goods-type table metadata, and the future database integration point.
+- `goods-types.js`: temporary debug records and the current loading integration
+  point.
 
-User mode currently returns no goods types because persistence is not implemented yet. Debug mode returns hardcoded goods types for UI testing.
+User mode currently returns no goods types because persistence is not implemented
+yet. Debug mode returns hardcoded goods types for UI testing. The persistence
+milestone will replace the direct loader with a storage contract and separate
+IndexedDB and in-memory debug adapters.
 
 ### `src/navigation/`
 
@@ -121,20 +126,38 @@ nav: { group: "utility" }
 
 ## Data Model Direction
 
-The planned database shape is:
+User mode will use IndexedDB through an application-owned storage contract.
+Physical object stores remain stable; goods types, field definitions, and custom
+values are records rather than generated database tables.
 
-- A `goods_types` table stores goods type records.
-- Each goods type owns one generated item table.
-- Adding a goods type in Administration should create the goods type record and generate the matching item table.
+Planned storage adapters:
 
-Current debug records already include the future table mapping:
+- `IndexedDbStorage`: persistent browser-local user data.
+- `DebugStorage`: in-memory fixtures that never write user data.
 
-- `id`
-- `label`
-- `tableName`
-- `description`
+Views, navigation, and renderers must not import IndexedDB APIs or object-store
+names. They consume plain domain records and call application operations. This
+also keeps versioned file import/export and a future Google Drive snapshot adapter
+independent from UI components.
 
-See `docs/data-model.md` for the full planned schema and mutation workflows.
+The current debug-only `tableName` property is legacy placeholder metadata. It
+must not become part of the persistent domain model.
+
+See `docs/data-model.md` for object stores, record shapes, transaction rules,
+versioning, and mutation workflows.
+
+### Persistence Integration Constraints
+
+IndexedDB is asynchronous. When persistence work begins, the composition root
+must select the adapter from app mode, await adapter initialization, and then load
+goods types before constructing data-dependent views and navigation. Startup must
+render an explicit loading state and a recoverable storage-error state rather
+than silently treating a failed database as an empty collection.
+
+Mutation coordination belongs at application level. Individual views request a
+domain operation; they do not open transactions or independently manage global
+busy state. Storage adapters are responsible for atomic writes and return plain
+records or domain errors.
 
 ## Service Worker
 

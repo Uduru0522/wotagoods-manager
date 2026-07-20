@@ -81,4 +81,7 @@ src/views/                 View definitions and renderer registry
 - Change app constants in `src/app/config.js`.
 - Change layout, colors, and motion in `src/styles/app.css`.
 
-Do not treat debug data as persistence. The intended persistence integration point is `loadDatabaseGoodsTypes()` in `src/data/goods-types.js`.
+Do not treat debug data as persistence. The planned user-mode database is
+IndexedDB behind a storage contract, with a separate in-memory debug adapter. See
+[Data Model](docs/data-model.md) for the persistence design and implementation
+sequence.

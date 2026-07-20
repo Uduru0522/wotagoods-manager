@@ -1,154 +1,156 @@
 # Data Model Design
 
-This document describes the planned database model and database-related workflows. It is a design document only; implementation should follow later.
+This document defines the planned browser-local persistence model and mutation
+workflows. It is a design contract only; persistence is not implemented yet.
 
 ## Goals
 
-- Support multiple goods types.
+- Run unchanged on GitHub Pages and the local development server.
+- Keep each browser profile's collection local by default.
+- Support multiple goods types without changing the physical database schema.
 - Let each goods type define custom item fields.
 - Keep required built-in item fields stable.
-- Use soft deletion for schema changes.
-- Keep the first implementation local-first and simple.
-- Leave room to move images out of the database later.
+- Preserve deleted data until the user explicitly purges it.
+- Keep debug data isolated from saved user data.
+- Support versioned file export and optional cloud backup later.
+
+## Platform Choice
+
+User mode will use IndexedDB. It is the browser's transactional database for
+structured records and binary values such as `Blob` objects.
+
+The application will use one database:
+
+```text
+wotagoods-manager
+```
+
+Do not create one object store per goods type. Creating or removing IndexedDB
+object stores requires a database-version upgrade and a blocked-upgrade flow
+across open tabs. Goods types and their fields are application data, not physical
+database schema.
 
 ## Naming Rules
 
-Use lowercase `snake_case` for physical database identifiers.
+- IndexedDB object-store and index names use lowercase `snake_case`.
+- JavaScript record properties use `camelCase`.
+- User-facing labels use unrestricted normal text.
+- IDs are opaque stable strings and are never derived from editable labels.
 
-Examples:
+This keeps persistent identifiers stable while matching JavaScript conventions
+inside the application.
 
-```text
-goods_types
-goods_type_fields
-goods_tapestries
-goods_acrylic_goods
-```
-
-User-facing names can use normal text and can be renamed without changing the physical table name.
-
-Use uppercase for SQL keywords if desired, but not for physical table or column names.
-
-## Core Tables
+## Logical Model
 
 ```mermaid
 erDiagram
-  goods_types ||--o{ goods_type_fields : defines
-  goods_types ||--|| goods_item_table : owns
+  goods_types ||--o{ field_definitions : defines
+  goods_types ||--o{ items : classifies
+  items o|--o| assets : references
 
   goods_types {
-    string id
-    string display_name
-    string item_table_name
+    string id PK
+    string displayName
     string description
-    boolean is_deleted
-    datetime created_at
-    datetime updated_at
+    boolean isDeleted
+    datetime deletedAt
+    datetime createdAt
+    datetime updatedAt
   }
 
-  goods_type_fields {
-    string id
-    string goods_type_id
-    string column_name
-    string display_name
-    string data_type
-    boolean is_required
-    boolean is_built_in
-    boolean is_deleted
-    int sort_order
-    string default_value
-    string options_json
-    datetime created_at
-    datetime updated_at
+  field_definitions {
+    string id PK
+    string goodsTypeId FK
+    string key
+    string displayName
+    string dataType
+    boolean isRequired
+    boolean isBuiltIn
+    number position
+    object defaultValue
+    object options
+    boolean isDeleted
+    datetime deletedAt
+    datetime createdAt
+    datetime updatedAt
   }
 
-  goods_item_table {
-    string id
+  items {
+    string id PK
+    string goodsTypeId FK
     string name
-    string image
-    boolean is_deleted
-    datetime created_at
-    datetime updated_at
+    string imageAssetId FK
+    object customValues
+    boolean isDeleted
+    datetime deletedAt
+    datetime createdAt
+    datetime updatedAt
+  }
+
+  assets {
+    string id PK
+    blob data
+    string mediaType
+    number width
+    number height
+    number byteSize
+    datetime createdAt
+    datetime updatedAt
+  }
+
+  app_metadata {
+    string key PK
+    object value
   }
 ```
 
-## Goods Type Table
+The diagram is logical. Relationships are enforced by the storage layer because
+IndexedDB does not provide foreign-key constraints.
 
-`goods_types` stores the list of goods types and maps each type to its generated item table.
+## Physical Object Stores
 
-```text
-goods_types
-- id
-- display_name
-- item_table_name
-- description
-- is_deleted
-- created_at
-- updated_at
+The initial IndexedDB version should contain these stable object stores:
+
+| Store | Key path | Planned indexes | Purpose |
+| --- | --- | --- | --- |
+| `goods_types` | `id` | `updatedAt` | Goods-type definitions |
+| `field_definitions` | `id` | `goodsTypeId`, unique `[goodsTypeId, key]` | Built-in and custom field metadata |
+| `items` | `id` | `goodsTypeId`, `[goodsTypeId, updatedAt]` | Items for every goods type |
+| `assets` | `id` | none initially | Cropped image Blobs and metadata |
+| `app_metadata` | `key` | none | Data-level metadata that is not a user setting |
+
+Indexes are implementation details and may be revised before version 1 is
+implemented. The object-store boundaries are the important contract. IndexedDB
+booleans are not valid index keys, so active/deleted filtering happens after the
+indexed goods-type query at this expected data scale.
+
+## Goods Types
+
+A goods type classifies items and owns field definitions. It does not own a
+physical table or object store.
+
+```js
+{
+  id: "stable-generated-id",
+  displayName: "Tapestries",
+  description: "Wall scrolls, fabric posters, and related display goods.",
+  isDeleted: false,
+  deletedAt: null,
+  createdAt: "2026-07-20T00:00:00.000Z",
+  updatedAt: "2026-07-20T00:00:00.000Z"
+}
 ```
 
-`id` should be stable. `display_name` can change. `item_table_name` should not change after creation unless a future migration tool is explicitly built.
+`displayName` may be renamed. `id` must never change. Navigation order can use
+creation order initially; explicit user-controlled goods-type ordering can be
+added later if the interface needs it.
 
-## Item Tables
+## Field Definitions
 
-Each goods type owns one item table. For example, a `Tapestries` goods type may own:
+Field definitions drive forms, validation, item-detail labels, and table columns.
+They are metadata records rather than physical database columns.
 
-```text
-goods_tapestries
-```
-
-Every item table must have these built-in fields:
-
-```text
-id
-name
-image
-created_at
-updated_at
-is_deleted
-```
-
-Built-in fields cannot be deleted by the user.
-
-`id` and `name` are required. `image` should exist by default but can be optional.
-
-Example:
-
-```mermaid
-erDiagram
-  goods_types ||--|| goods_tapestries : owns
-
-  goods_types {
-    string id
-    string display_name
-    string item_table_name
-  }
-
-  goods_tapestries {
-    string id
-    string name
-    string image
-    boolean is_deleted
-    datetime created_at
-    datetime updated_at
-    string custom_field_example
-  }
-```
-
-## Field Metadata
-
-`goods_type_fields` describes each built-in or custom field.
-
-This table is needed because a physical database column alone does not know:
-
-- the user-facing display name
-- the field type
-- whether the field is required
-- whether the field is built-in
-- sort order in forms/tables
-- whether the field was soft-deleted
-- future select/tag options
-
-Recommended initial field types:
+Recommended initial data types:
 
 ```text
 text
@@ -160,7 +162,7 @@ url
 select
 ```
 
-Future field types:
+Deferred types:
 
 ```text
 tags
@@ -170,238 +172,321 @@ image_set
 relation
 ```
 
+`key` is a stable machine-facing identifier unique within one goods type.
+`displayName` is editable. `position` is retained because forms and detail views
+need deterministic field ordering; it is presentation metadata, not a SQL sort
+instruction.
+
+### Built-In Fields
+
+Every goods type exposes these built-in item fields:
+
+| Field | Required | User editable | Deletable |
+| --- | --- | --- | --- |
+| `id` | Yes | No | No |
+| `name` | Yes | Yes | No |
+| `image` | No | Yes | No |
+
+`createdAt`, `updatedAt`, `isDeleted`, and `deletedAt` are system properties and
+do not need normal field-definition records.
+
+Built-in field-definition records may still be stored so one renderer can handle
+built-in and custom fields consistently. Their protected rules must be enforced
+by domain validation, not only by disabled UI controls.
+
+## Items And Custom Values
+
+All goods types share the `items` store. `goodsTypeId` determines which field
+definitions apply to an item.
+
+Custom values are stored in an object keyed by stable field-definition ID:
+
+```js
+{
+  id: "item-id",
+  goodsTypeId: "goods-type-id",
+  name: "Example item",
+  imageAssetId: "asset-id",
+  customValues: {
+    "field-id-material": "polyester",
+    "field-id-release-date": "2026-07-20"
+  },
+  isDeleted: false,
+  deletedAt: null,
+  createdAt: "2026-07-20T00:00:00.000Z",
+  updatedAt: "2026-07-20T00:00:00.000Z"
+}
+```
+
+Using field IDs prevents a display-name change from rewriting every item. A
+soft-deleted field leaves its values untouched, so restoring the field reveals
+the existing values again.
+
 ## Image Storage
 
-For the first implementation, `image` can store a stringified low-resolution image. This matches the expected database size: at most a few thousand entries even after long-term use.
+Processed images should be stored as `Blob` values in `assets`, not Base64 text
+inside item records. Base64 adds size overhead and forces unnecessary encoding
+and decoding in normal browser use.
 
-The code should still treat image storage behind a small image-service boundary so a future version can move images to:
+An item stores only `imageAssetId`. The asset record stores:
 
-- local files
-- browser storage blobs
-- object URLs
-- a separate `ASSETS` table
-- cloud/object storage
+- cropped image Blob
+- media type
+- pixel dimensions
+- byte size
+- timestamps
 
-Todo:
-
-- define max image dimensions
-- define image compression settings
-- define whether original images are kept
-- add migration path from database image strings to external assets
-
-## Soft Deletion
-
-Items, goods types, and fields should use soft deletion.
-
-Soft deletion means records are marked deleted instead of being physically removed:
-
-```text
-is_deleted = true
-```
-
-This matters most for field deletion. Dropping a database column immediately is risky because it destroys data. The first version should mark fields as deleted and hide them from normal forms/views.
-
-Future work:
-
-- restore deleted fields
-- permanently purge deleted fields
-- export data before purge
-
-## Add Item Workflow
-
-```mermaid
-flowchart TD
-  A[User opens Add item view] --> B[Render empty form from goods_type_fields]
-  B --> C[Required fields show red required marker]
-  C --> D[User edits form fields]
-  D --> E{User wants to add or change image?}
-  E -->|Yes| F[User chooses image]
-  F --> G[User crops image]
-  G --> H[Store cropped preview in form]
-  H --> D
-  E -->|No| I{Required fields valid?}
-  I -->|No| D
-  I -->|Yes| J[User clicks confirm]
-  J --> K[Show review screen]
-  K --> L{User confirms review?}
-  L -->|No| D
-  L -->|Yes| M[Lock dangerous UI]
-  M --> N[Show progress state]
-  N --> O[Write item transaction]
-  O --> P{Write successful?}
-  P -->|Yes| Q[Unlock UI and show success]
-  P -->|No| R[Rollback if possible and show error]
-  R --> S[Unlock UI]
-```
-
-During the database write, the app should prevent competing dangerous operations:
-
-- changing goods type schema
-- adding another item to the same table
-- deleting fields
-- switching into operations that mutate the same data
-
-The UI does not need to freeze every harmless view, but it should clearly show that a database mutation is in progress.
-
-## Image Crop Requirement
-
-When adding an item image, the user should crop the image before saving.
-
-Allowed aspect ratios:
+Allowed crop ratios are:
 
 ```text
 portrait 1:sqrt(2)
 horizontal sqrt(2):1
 ```
 
-These match A-series and B-series paper ratios.
+The first implementation should store only the processed low-resolution image.
+Maximum dimensions, output format, and compression quality remain open decisions.
+Keeping assets behind a storage operation allows a future implementation to use
+file handles, cloud objects, or another IndexedDB strategy without changing item
+renderers.
 
-The stored database image should be the processed/cropped low-resolution version, not the raw original.
+## Soft Deletion
 
-## Field Management Workflow
+Goods types, field definitions, and items use both:
 
-The Administration view should avoid the word "column" in user-facing UI. Better labels:
-
-```text
-Manage fields
-Customize item fields
-Edit fields
+```js
+isDeleted: true
+deletedAt: "2026-07-20T00:00:00.000Z"
 ```
 
-Recommended user-facing label:
+The boolean supports straightforward filtering and indexing. The timestamp
+supports restoration UI, auditing, retention rules, and eventual purging.
 
-```text
-Manage fields
-```
+Deleting a goods type soft-deletes the type only. Its fields, items, and assets
+remain recoverable. A future permanent-purge operation must explicitly traverse
+and remove dependent records in one controlled process.
 
-Field changes should be staged before they are applied.
+## Add Item Workflow
 
 ```mermaid
 flowchart TD
-  A[User opens Administration] --> B[User opens Manage fields]
-  B --> C[User chooses goods type]
-  C --> D{Action}
-  D -->|Add field| E[Enter field name, type, required flag, options]
-  D -->|Modify field| F[Edit allowed field settings]
-  D -->|Delete field| G[Confirm soft deletion]
-  E --> H[Create staged change]
-  F --> H
-  G --> H
-  H --> I[Show staged changes list]
-  I --> J{More changes?}
-  J -->|Yes| D
-  J -->|No| K{Apply staged changes?}
-  K -->|No| L[Drop staged changes]
-  K -->|Yes| M[Lock dangerous UI]
-  M --> N[Show progress state]
-  N --> O[Apply schema transaction]
-  O --> P{Successful?}
-  P -->|Yes| Q[Clear staged changes and unlock UI]
-  P -->|No| R[Rollback if possible and show error]
-  R --> S[Unlock UI]
+  A[Open Add item] --> B[Load goods type and active field definitions]
+  B --> C[Render empty form and mark required fields]
+  C --> D[Edit form values]
+  D --> E{Add or change image?}
+  E -->|Yes| F[Choose and crop image]
+  F --> G[Keep processed preview in form state]
+  G --> D
+  E -->|No| H{Form valid?}
+  H -->|No| D
+  H -->|Yes| I[Open review screen]
+  I --> J{Confirm save?}
+  J -->|No| D
+  J -->|Yes| K[Enter shared mutation state]
+  K --> L[Write asset and item in one transaction]
+  L --> M{Transaction successful?}
+  M -->|Yes| N[Clear draft and show success]
+  M -->|No| O[Keep draft and show recoverable error]
+  N --> P[Leave mutation state]
+  O --> P
+```
+
+The draft and cropped preview remain UI memory until confirmation. Creating the
+asset and item must use one read-write transaction so neither can be committed
+without the other.
+
+## Manage Fields Workflow
+
+Use **Manage fields** in user-facing text. Do not expose database terms such as
+"column" or "object store."
+
+```mermaid
+flowchart TD
+  A[Open Manage fields] --> B[Choose goods type]
+  B --> C{Choose action}
+  C -->|Add| D[Configure new field]
+  C -->|Modify| E[Edit supported metadata]
+  C -->|Delete| F[Confirm soft deletion]
+  D --> G[Stage change in memory]
+  E --> G
+  F --> G
+  G --> H[Review staged changes]
+  H --> I{Apply changes?}
+  I -->|No| J[Discard staged changes]
+  I -->|Yes| K[Validate complete change set]
+  K --> L{Valid?}
+  L -->|No| H
+  L -->|Yes| M[Enter shared mutation state]
+  M --> N[Apply records in one transaction]
+  N --> O{Transaction successful?}
+  O -->|Yes| P[Clear staged changes]
+  O -->|No| Q[Keep staged changes and show error]
+  P --> R[Leave mutation state]
+  Q --> R
 ```
 
 Rules:
 
+- Staged changes live only in memory and disappear on refresh or close.
 - A field can have only one staged change at a time.
 - Built-in fields cannot be deleted.
 - `id` and `name` cannot be made optional.
-- Deleted fields are soft-deleted first.
-- If the user leaves without applying, staged changes are dropped.
+- Soft deletion preserves existing item values.
+- The complete staged set is validated before opening a transaction.
 
-## Field Modification Advice
+Safe initial modifications:
 
-Field modification is more complicated than adding or deleting.
+- rename a display label
+- change required to optional
+- change field position
+- add select options without invalidating existing values
 
-Safe first-version modifications:
+Deferred migration operations:
 
-- rename display name
-- change required flag from required to optional
-- change sort order
-- edit select options only if old values remain valid
+- change a field's data type
+- change optional to required while existing values are empty
+- change a stable field key
+- remove select options used by existing items
 
-Riskier modifications:
+Because custom fields are metadata, applying ordinary field changes does not
+require an IndexedDB version upgrade.
 
-- changing data type
-- changing optional to required when existing rows have empty values
-- renaming the physical column name
-- removing select options that existing items use
+## Transactions And Busy State
 
-Recommended rule for the first implementation:
-
-```text
-Allow safe metadata-only modifications first.
-Defer destructive or data-migrating modifications.
-```
-
-For example, changing a field from `text` to `number` should be a future migration feature, not a simple edit.
-
-## Staged Schema Changes
-
-Staged schema changes should live only in local UI memory.
-
-Do not store staged schema changes in the database. If the user closes or refreshes the app before applying changes, the staged changes should disappear. This keeps the database limited to applied truth and avoids leaving half-intended schema edits behind.
-
-Only one staged change per field should be allowed:
+Every mutation must be expressed as one storage-layer transaction with an
+explicit store set. The central application mutation state controls conflicting
+UI actions; IndexedDB transaction atomicity protects the data itself.
 
 ```mermaid
-flowchart LR
-  A[Field] --> B{Already staged?}
-  B -->|No| C[Allow staging]
-  B -->|Yes| D[Ask user to replace or cancel existing staged change]
+stateDiagram-v2
+  [*] --> Ready
+  Ready --> Busy : mutation starts
+  Busy --> Ready : committed
+  Busy --> Error : failed or aborted
+  Error --> Ready : acknowledged or retried
 ```
+
+When busy, the app should disable conflicting mutations and show progress. It
+does not need to block harmless reading or navigation unless the active workflow
+cannot safely survive navigation.
+
+## Storage Boundary
+
+Views and navigation must not import IndexedDB APIs. They call application
+operations backed by a storage adapter.
+
+The initial contract should cover these capabilities:
+
+```text
+initialize
+list/get/create/update/soft-delete goods types
+list/apply field definitions
+list/get/update/soft-delete items
+create an item and optional image atomically
+get assets needed for rendering
+export/import a collection snapshot
+```
+
+Planned adapters:
+
+- `IndexedDbStorage`: persistent user-mode implementation.
+- `DebugStorage`: isolated in-memory fixtures that never write user data.
+
+Return plain domain records from both adapters. Do not leak `IDBRequest`,
+`IDBTransaction`, object-store names, or browser events into views.
+
+## Versioning And Migrations
+
+Three versions have different responsibilities:
+
+1. **IndexedDB version** changes only when object stores or indexes change.
+2. **Domain model version** records semantic data migrations when record shapes
+   change.
+3. **Export format version** allows old backup files to be imported safely.
+
+Store domain metadata in `app_metadata`, for example:
+
+```js
+{ key: "domainModelVersion", value: 1 }
+```
+
+IndexedDB upgrades must be small, deterministic, and idempotent where possible.
+Adding a goods type or custom field is normal data mutation and must never bump
+the IndexedDB version.
+
+## Export, Import, And Cloud Backup
+
+Browser storage belongs to one origin and browser profile. Consequently:
+
+- `http://localhost:4173` and the GitHub Pages URL have separate databases.
+- clearing site data removes the local database
+- another browser or device cannot see the collection automatically
+
+Export is therefore part of data safety, not an optional convenience.
+
+Exports must use a versioned storage-neutral representation rather than exposing
+raw IndexedDB records or internal keys. A first version may use one JSON file and
+encode image Blobs for portability. A later archive format can store metadata as
+JSON and images as binary files without changing the domain model.
+
+Import must validate the complete file before mutation and then either replace or
+merge data in a controlled transaction. The UI must never silently merge records.
+
+Google Drive should initially store and retrieve complete export snapshots. It
+should not act as a live multi-device database until conflict handling, revision
+tracking, and authentication lifecycle behavior are deliberately designed.
 
 ## Backup Strategy
 
-Creating a full database backup before every schema change is safe but can grow large.
+Soft field deletion and metadata-only changes remove the need to make a full
+backup before every ordinary field edit. Recommended progression:
 
-Given the expected database size is only a few thousand entries after decades, full backups may be acceptable for early versions. Still, the design should avoid making full backups mandatory forever.
+1. Add explicit local export and validated import.
+2. Offer a backup reminder before import, purge, or future data migrations.
+3. Add optional Google Drive snapshot upload/download.
+4. Add bounded automatic snapshot retention only after storage costs and conflict
+   behavior are defined.
 
-Recommended staged approach:
+## Planned File Boundaries
 
-1. First version: create a full export/backup before applying schema changes.
-2. Later: keep migration logs for schema changes.
-3. Later: add manual backup/export tools.
-4. Later: add automatic backup retention rules.
-
-Backup retention should eventually be limited, for example:
+The implementation should grow `src/data/` by responsibility rather than putting
+all persistence in `goods-types.js`:
 
 ```text
-Keep last 10 automatic schema-change backups.
-Let user export permanent backups manually.
+src/data/
+  contracts/          Storage contract and domain errors
+  indexeddb/          Connection, upgrades, transactions, repositories
+  debug/              In-memory debug adapter and fixtures
+  models/             Record factories and validation
+  transfer/           Versioned export/import mapping
 ```
 
-## Database Locking / Busy State
+These are planned boundaries, not directories that must be created before their
+first real module exists.
 
-Any database mutation should use a shared app-level busy state.
+## Implementation Sequence
 
-```mermaid
-flowchart LR
-  READY["Ready"]
-  BUSY["Busy"]
-  ERROR["Error"]
+1. Define domain record factories, validation rules, storage errors, and the
+   asynchronous storage contract.
+2. Move current fixtures into `DebugStorage` and preserve existing debug-mode UI
+   behavior without persistence.
+3. Add the IndexedDB connection, version-1 upgrade, and transaction helpers.
+4. Make application startup await storage initialization and goods-type loading,
+   with explicit loading and recoverable error states.
+5. Add goods-type creation through application operations, then field management,
+   then item creation.
+6. Add versioned export and validated import before relying on the database for
+   significant user data.
 
-  READY -->|start mutation| BUSY
-  BUSY -->|success| READY
-  BUSY -->|failure| ERROR
-  ERROR -->|user acknowledges| READY
-```
-
-When busy:
-
-- disable dangerous actions
-- show progress
-- keep current operation visible
-- prevent navigation into conflicting mutation flows
-- avoid starting another schema or item mutation
-
-This should be implemented as a central service/state later, not separately inside each form.
+Each milestone should leave user mode usable and must keep debug mode isolated.
+Do not add empty directories or speculative modules before their responsibility
+is implemented.
 
 ## Open Decisions
 
-- Exact database engine.
-- Maximum stored image dimensions and compression quality.
-- Whether original images are discarded or stored separately.
-- Backup format and backup location.
-- Whether field restoration is available in the first database version.
+- Maximum processed image dimensions, format, and compression quality.
+- Whether field restoration ships in the first persistence milestone.
+- Initial export format: JSON-only or an archive with binary assets.
+- Import conflict choices and ID collision behavior.
+- Whether explicit goods-type reordering is needed.
 - Whether tags are global, per goods type, or per field.
+- Google Drive authentication and snapshot retention policy.
