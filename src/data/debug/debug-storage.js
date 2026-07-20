@@ -9,15 +9,18 @@ import {
 import { parseFieldDefinitionRecord } from "../models/field-definition.js";
 import { parseGoodsTypeRecord } from "../models/goods-type.js";
 import { parseItemRecord } from "../models/item.js";
+import { parseAssetRecord } from "../models/asset.js";
 
 export function createDebugStorage({
   goodsTypes = createDebugGoodsTypes(),
   fieldDefinitions = createDebugFieldDefinitions(goodsTypes),
-  items = []
+  items = [],
+  assets = []
 } = {}) {
   const records = goodsTypes.map(parseGoodsTypeRecord);
   const fieldRecords = fieldDefinitions.map(parseFieldDefinitionRecord);
   const itemRecords = items.map(parseItemRecord);
+  const assetRecords = assets.map(parseAssetRecord);
   let isInitialized = false;
 
   function assertInitialized() {
@@ -141,13 +144,19 @@ export function createDebugStorage({
     return structuredClone(parsedFields);
   }
 
-  async function createItem(item) {
+  async function createItem({ asset, item }) {
     assertInitialized();
 
     let parsedItem;
+    let parsedAsset;
 
     try {
       parsedItem = parseItemRecord(item);
+      parsedAsset = asset === null ? null : parseAssetRecord(asset);
+
+      if (parsedItem.imageAssetId !== (parsedAsset?.id ?? null)) {
+        throw new TypeError("The item references a different image asset.");
+      }
     } catch (error) {
       throw new StorageError("The item write contains invalid data.", {
         cause: error,
@@ -157,6 +166,7 @@ export function createDebugStorage({
 
     if (
       itemRecords.some(({ id }) => id === parsedItem.id) ||
+      (parsedAsset && assetRecords.some(({ id }) => id === parsedAsset.id)) ||
       !records.some(({ id, isDeleted }) => id === parsedItem.goodsTypeId && !isDeleted)
     ) {
       throw new StorageError("The item has invalid or duplicate identity.", {
@@ -164,8 +174,17 @@ export function createDebugStorage({
       });
     }
 
+    if (parsedAsset) {
+      assetRecords.push(parsedAsset);
+    }
     itemRecords.push(parsedItem);
     return structuredClone(parsedItem);
+  }
+
+  async function getAsset(assetId) {
+    assertInitialized();
+    const asset = assetRecords.find(({ id }) => id === assetId);
+    return asset ? structuredClone(asset) : null;
   }
 
   async function listItems(goodsTypeId, { includeDeleted = false } = {}) {
@@ -184,6 +203,7 @@ export function createDebugStorage({
     records.splice(0, records.length);
     fieldRecords.splice(0, fieldRecords.length);
     itemRecords.splice(0, itemRecords.length);
+    assetRecords.splice(0, assetRecords.length);
   }
 
   function close() {
@@ -194,6 +214,7 @@ export function createDebugStorage({
     close,
     createGoodsType,
     createItem,
+    getAsset,
     initialize,
     listFieldDefinitions,
     listGoodsTypes,

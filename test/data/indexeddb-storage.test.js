@@ -633,7 +633,7 @@ test("item repository validates and writes one item transaction", async () => {
   const repository = createItemRepository(database);
   const item = createItemRecord();
 
-  await repository.create(item);
+  await repository.create({ asset: null, item });
 
   assert.deepEqual(database.transactions, [
     { mode: "readwrite", storeNames: OBJECT_STORES.items }
@@ -641,6 +641,34 @@ test("item repository validates and writes one item transaction", async () => {
   assert.deepEqual(database.writes, [
     { record: item, storeName: OBJECT_STORES.items }
   ]);
+});
+
+test("item repository writes an image and item atomically", async () => {
+  const database = createWriteDatabase();
+  const repository = createItemRepository(database);
+  const item = { ...createItemRecord(), imageAssetId: "asset-1" };
+  const data = new Blob(["image"], { type: "image/jpeg" });
+  const asset = {
+    id: "asset-1",
+    data,
+    mediaType: "image/jpeg",
+    width: 560,
+    height: 792,
+    byteSize: data.size,
+    createdAt: item.createdAt,
+    updatedAt: item.updatedAt
+  };
+
+  await repository.create({ asset, item });
+
+  assert.deepEqual(database.transactions, [{
+    mode: "readwrite",
+    storeNames: [OBJECT_STORES.assets, OBJECT_STORES.items]
+  }]);
+  assert.deepEqual(
+    database.writes.map(({ storeName }) => storeName),
+    [OBJECT_STORES.assets, OBJECT_STORES.items]
+  );
 });
 
 test("item repository rejects invalid records before opening a transaction", async () => {

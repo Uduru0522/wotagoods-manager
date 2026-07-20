@@ -237,16 +237,50 @@ test("DebugStorage creates and lists isolated item records", async () => {
   const storage = createDebugStorage();
 
   await storage.initialize();
-  await storage.createItem(item);
+  await storage.createItem({ asset: null, item });
 
   const firstRead = await storage.listItems("figures");
   firstRead[0].name = "External change";
   assert.equal((await storage.listItems("figures"))[0].name, "Example figure");
-  await assert.rejects(storage.createItem(item), /duplicate identity/);
+  await assert.rejects(storage.createItem({ asset: null, item }), /duplicate identity/);
   await assert.rejects(
-    storage.createItem({ ...item, id: "wrong-type", goodsTypeId: "missing" }),
+    storage.createItem({
+      asset: null,
+      item: { ...item, id: "wrong-type", goodsTypeId: "missing" }
+    }),
     /invalid or duplicate identity/
   );
+});
+
+test("DebugStorage keeps image assets linked to their item", async () => {
+  const data = new Blob(["image"], { type: "image/jpeg" });
+  const asset = {
+    id: "asset-1",
+    data,
+    mediaType: "image/jpeg",
+    width: 560,
+    height: 792,
+    byteSize: data.size,
+    createdAt: FIXED_TIME,
+    updatedAt: FIXED_TIME
+  };
+  const item = createItemRecord(
+    {
+      id: "figure-with-image",
+      goodsTypeId: "figures",
+      imageAssetId: asset.id,
+      name: "Figure with image"
+    },
+    { now: () => FIXED_TIME }
+  );
+  const storage = createDebugStorage();
+
+  await storage.initialize();
+  await storage.createItem({ asset, item });
+
+  const storedAsset = await storage.getAsset(asset.id);
+  assert.equal(storedAsset.data.size, data.size);
+  assert.equal((await storage.listItems("figures"))[0].imageAssetId, asset.id);
 });
 
 test("DebugStorage reset clears all temporary domain records", async () => {
@@ -256,9 +290,10 @@ test("DebugStorage reset clears all temporary domain records", async () => {
   assert.equal((await storage.listGoodsTypes()).length, 3);
   assert.equal((await storage.listFieldDefinitions("figures")).length, 3);
 
-  await storage.createItem(
-    createItemRecord({ id: "figure-1", goodsTypeId: "figures", name: "Figure" })
-  );
+  await storage.createItem({
+    asset: null,
+    item: createItemRecord({ id: "figure-1", goodsTypeId: "figures", name: "Figure" })
+  });
 
   await storage.resetData();
 

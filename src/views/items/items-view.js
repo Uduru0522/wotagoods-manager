@@ -43,8 +43,13 @@ export function renderItemsView({ goodsType }, { itemManagement, mutationControl
     });
 
     try {
-      const items = await itemManagement.listItems(goodsType.id);
-      listTransition.replace(() => listSlot.replaceChildren(createItemList(items)));
+      const [items, fields] = await Promise.all([
+        itemManagement.listItems(goodsType.id),
+        itemManagement.getEntryFields(goodsType.id)
+      ]);
+      listTransition.replace(() => listSlot.replaceChildren(
+        createItemList(items, fields, { getAsset: itemManagement.getAsset })
+      ));
     } catch (error) {
       console.error("Items could not be loaded:", error);
       listTransition.replace(() => {

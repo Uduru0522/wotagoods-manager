@@ -88,6 +88,11 @@ export function createIndexedDbStorage({
     return itemRepository.list(goodsTypeId, options);
   }
 
+  async function getAsset(assetId) {
+    assertInitialized();
+    return itemRepository.getAsset(assetId);
+  }
+
   function close() {
     database?.close();
     database = null;
@@ -101,6 +106,7 @@ export function createIndexedDbStorage({
     close,
     createGoodsType,
     createItem,
+    getAsset,
     initialize,
     listFieldDefinitions,
     listGoodsTypes,

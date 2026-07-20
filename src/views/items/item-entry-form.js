@@ -1,5 +1,10 @@
 import { createActionButton } from "../../shared/action-button.js";
 import { createElement } from "../../shared/dom.js";
+import { normalizeHttpsUrl } from "../../application/items/manage-items.js";
+import {
+  createItemImageField,
+  prepareItemImage
+} from "./item-image-field.js";
 
 function createRequiredMark() {
   return createElement("span", {
@@ -38,17 +43,11 @@ function createSelectInput(field) {
   return select;
 }
 
-function createBooleanInput(field) {
-  const select = createElement("select", {
-    attributes: field.isRequired ? { required: "" } : {}
+function createBooleanInput() {
+  return createElement("input", {
+    attributes: { role: "switch", type: "checkbox" },
+    className: "switch-input item-boolean-input"
   });
-
-  select.append(
-    createElement("option", { attributes: { value: "" }, textContent: "Not set" }),
-    createElement("option", { attributes: { value: "true" }, textContent: "Yes" }),
-    createElement("option", { attributes: { value: "false" }, textContent: "No" })
-  );
-  return select;
 }
 
 function createFieldControl(field) {
@@ -73,12 +72,13 @@ function createFieldControl(field) {
     date: "date",
     number: "number",
     text: "text",
-    url: "url"
+    url: "text"
   };
 
   return createElement("input", {
     attributes: {
       type: inputTypes[field.dataType] ?? "text",
+      ...(field.dataType === "url" ? { inputmode: "url" } : {}),
       ...(field.dataType === "number" ? { step: "any" } : {}),
       ...(field.isRequired ? { required: "" } : {})
     }
@@ -86,6 +86,10 @@ function createFieldControl(field) {
 }
 
 function readControlValue(field, control) {
+  if (field.dataType === "boolean") {
+    return control.checked;
+  }
+
   if (control.value === "") {
     return undefined;
   }
@@ -94,36 +98,21 @@ function readControlValue(field, control) {
     return control.valueAsNumber;
   }
 
-  if (field.dataType === "boolean") {
-    return control.value === "true";
-  }
-
   return control.value;
 }
 
 function setControlValue(field, control, value) {
+  if (field.dataType === "boolean") {
+    control.checked = value === true;
+    return;
+  }
+
   if (value === undefined || value === null) {
     control.value = "";
     return;
   }
 
-  control.value = field.dataType === "boolean" ? String(value) : value;
-}
-
-export function formatItemFieldValue(field, value) {
-  if (value === undefined) {
-    return "Not set";
-  }
-
-  if (field.dataType === "boolean") {
-    return value ? "Yes" : "No";
-  }
-
-  if (field.dataType === "select") {
-    return field.options.choices.find(({ id }) => id === value)?.label ?? "Unknown option";
-  }
-
-  return String(value);
+  control.value = value;
 }
 
 export function createItemEntryForm({ draft, fields, onReview }) {
@@ -138,6 +127,7 @@ export function createItemEntryForm({ draft, fields, onReview }) {
     attributes: { autocomplete: "off", required: "", type: "text" }
   });
   const customFields = fields.filter((field) => !field.isBuiltIn);
+  const imageField = fields.find((field) => field.isBuiltIn && field.key === "image");
   const controls = new Map();
   const feedback = createElement("p", {
     attributes: { "aria-live": "polite" },
@@ -150,7 +140,10 @@ export function createItemEntryForm({ draft, fields, onReview }) {
   const actions = createElement("div", { className: "form-actions" });
 
   nameInput.value = draft.name;
-  fieldGrid.append(createFieldLabel(nameField, nameInput));
+  fieldGrid.append(
+    createFieldLabel(nameField, nameInput),
+    createItemImageField({ draft, field: imageField })
+  );
 
   customFields.forEach((field) => {
     const control = createFieldControl(field);
@@ -163,8 +156,25 @@ export function createItemEntryForm({ draft, fields, onReview }) {
     fieldGrid.append(createFieldLabel(field, control));
   });
 
-  form.addEventListener("submit", (event) => {
+  form.addEventListener("submit", async (event) => {
     event.preventDefault();
+
+    customFields
+      .filter((field) => field.dataType === "url")
+      .forEach((field) => {
+        const control = controls.get(field.id);
+        control.setCustomValidity("");
+
+        if (!control.value.trim()) {
+          return;
+        }
+
+        try {
+          control.value = normalizeHttpsUrl(control.value, field.displayName);
+        } catch (error) {
+          control.setCustomValidity(error.message);
+        }
+      });
 
     if (!form.reportValidity()) {
       return;
@@ -180,7 +190,17 @@ export function createItemEntryForm({ draft, fields, onReview }) {
     draft.name = nameInput.value.trim();
     draft.customValues = customValues;
     feedback.textContent = "";
-    onReview();
+    reviewButton.disabled = true;
+    reviewButton.textContent = draft.imageSource ? "Processing image..." : "Preparing review...";
+
+    try {
+      await prepareItemImage(draft);
+      onReview();
+    } catch (error) {
+      feedback.textContent = "The selected image could not be processed. Choose another image and try again.";
+      reviewButton.disabled = false;
+      reviewButton.textContent = "Review item";
+    }
   });
 
   actions.append(reviewButton);

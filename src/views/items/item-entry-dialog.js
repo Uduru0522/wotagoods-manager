@@ -8,13 +8,18 @@ import {
   prefersReducedMotion
 } from "../../shared/motion.js";
 import { createMetaList } from "../../shared/ui-components.js";
-import {
-  createItemEntryForm,
-  formatItemFieldValue
-} from "./item-entry-form.js";
+import { createItemEntryForm } from "./item-entry-form.js";
+import { clearItemImageDraft } from "./item-image-field.js";
+import { formatItemFieldValue } from "./item-value-format.js";
 
 function createDraft() {
-  return { customValues: {}, name: "" };
+  return {
+    customValues: {},
+    image: null,
+    imageSource: null,
+    name: "",
+    processedImageUrl: ""
+  };
 }
 
 export function createItemEntryDialog({
@@ -112,10 +117,19 @@ export function createItemEntryDialog({
       createElement("h4", { textContent: "Review item" }),
       createElement("p", { textContent: "Confirm the values before saving them locally." })
     );
+    if (draft.processedImageUrl) {
+      review.append(
+        createElement("img", {
+          attributes: { alt: "Processed item image", src: draft.processedImageUrl },
+          className: "item-review-image"
+        })
+      );
+    }
     backButton.addEventListener("click", renderEditor);
     saveButton.addEventListener("click", saveItem);
     actions.append(backButton, saveButton);
-    review.append(headingBlock, createMetaList(values), feedback, actions);
+    review.prepend(headingBlock);
+    review.append(createMetaList(values), feedback, actions);
     contentTransition.replace(() => body.replaceChildren(review));
   }
 
@@ -134,12 +148,13 @@ export function createItemEntryDialog({
 
     try {
       await mutationController.run(async () => {
-        const item = await itemManagement.createItem({
+        const result = await itemManagement.createItem({
           goodsTypeId: goodsType.id,
           name: draft.name,
-          customValues: draft.customValues
+          customValues: draft.customValues,
+          image: draft.image
         });
-        await onCreated(item);
+        await onCreated(result.item);
       });
 
       renderSuccess();
@@ -160,8 +175,13 @@ export function createItemEntryDialog({
     const doneButton = createActionButton("Done", { className: "primary-action" });
     const anotherButton = createActionButton("Add another");
 
-    doneButton.addEventListener("click", requestClose);
+    doneButton.addEventListener("click", () => {
+      requestClose();
+      clearItemImageDraft(draft);
+      draft = createDraft();
+    });
     anotherButton.addEventListener("click", () => {
+      clearItemImageDraft(draft);
       draft = createDraft();
       renderEditor();
     });

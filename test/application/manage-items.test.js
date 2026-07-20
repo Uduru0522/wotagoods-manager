@@ -3,6 +3,7 @@ import test from "node:test";
 
 import {
   createItemManagementOperations,
+  normalizeHttpsUrl,
   normalizeItemValues
 } from "../../src/application/items/manage-items.js";
 import { createFieldDefinitionRecord } from "../../src/data/models/field-definition.js";
@@ -82,6 +83,12 @@ test("required text is checked after whitespace normalization", () => {
   assert.throws(() => normalizeItemValues([field], { maker: "   " }), /Maker is required/);
 });
 
+test("web addresses default to https and reject explicit insecure URLs", () => {
+  assert.equal(normalizeHttpsUrl("www.google.com"), "https://www.google.com/");
+  assert.equal(normalizeHttpsUrl("https://example.com/path"), "https://example.com/path");
+  assert.throws(() => normalizeHttpsUrl("http://example.com"), /must use https/);
+});
+
 test("item creation reloads active fields and writes one validated record", async () => {
   const writes = [];
   const nameField = createField({
@@ -102,6 +109,7 @@ test("item creation reloads active fields and writes one validated record", asyn
   const operations = createItemManagementOperations({
     storage: {
       async createItem(item) { writes.push(item); },
+      async getAsset() { return null; },
       async listFieldDefinitions() { return [nameField, notesField]; },
       async listGoodsTypes() { return [{ id: "figures" }]; },
       async listItems() { return []; }
@@ -110,14 +118,48 @@ test("item creation reloads active fields and writes one validated record", asyn
     now: () => FIXED_TIME
   });
 
-  const item = await operations.createItem({
+  const result = await operations.createItem({
     goodsTypeId: "figures",
     name: " Example ",
     customValues: { notes: "Boxed" }
   });
 
   assert.equal(writes.length, 1);
-  assert.deepEqual(item, writes[0]);
-  assert.equal(item.name, "Example");
-  assert.deepEqual(item.customValues, { notes: "Boxed" });
+  assert.deepEqual(result, writes[0]);
+  assert.equal(result.item.name, "Example");
+  assert.deepEqual(result.item.customValues, { notes: "Boxed" });
+  assert.equal(result.asset, null);
+});
+
+test("item creation builds an image asset and item reference for one storage write", async () => {
+  const writes = [];
+  const image = {
+    data: new Blob(["image"], { type: "image/jpeg" }),
+    height: 792,
+    mediaType: "image/jpeg",
+    width: 560
+  };
+  const generatedIds = ["asset-1", "item-1"];
+  const operations = createItemManagementOperations({
+    storage: {
+      async createItem(bundle) { writes.push(bundle); },
+      async getAsset() { return null; },
+      async listFieldDefinitions() { return []; },
+      async listGoodsTypes() { return [{ id: "figures" }]; },
+      async listItems() { return []; }
+    },
+    generateId: () => generatedIds.shift(),
+    now: () => FIXED_TIME
+  });
+
+  const result = await operations.createItem({
+    goodsTypeId: "figures",
+    image,
+    name: "Example"
+  });
+
+  assert.equal(result.asset.id, "asset-1");
+  assert.equal(result.item.id, "item-1");
+  assert.equal(result.item.imageAssetId, "asset-1");
+  assert.deepEqual(writes, [result]);
 });

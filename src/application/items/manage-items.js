@@ -1,3 +1,4 @@
+import { createAssetRecord } from "../../data/models/asset.js";
 import { createItemRecord } from "../../data/models/item.js";
 
 function defaultIdGenerator() {
@@ -22,20 +23,24 @@ function validateDate(value, label) {
   return value;
 }
 
-function validateUrl(value, label) {
+export function normalizeHttpsUrl(value, label = "Web address") {
+  const trimmedValue = value.trim();
+  const normalizedValue = /^[a-z][a-z\d+.-]*:/i.test(trimmedValue)
+    ? trimmedValue
+    : `https://${trimmedValue}`;
   let parsedUrl;
 
   try {
-    parsedUrl = new URL(value);
+    parsedUrl = new URL(normalizedValue);
   } catch {
     throw new TypeError(`${label} must be a valid web address.`);
   }
 
-  if (!["http:", "https:"].includes(parsedUrl.protocol)) {
-    throw new TypeError(`${label} must use http or https.`);
+  if (parsedUrl.protocol !== "https:") {
+    throw new TypeError(`${label} must use https.`);
   }
 
-  return value;
+  return parsedUrl.href;
 }
 
 function validateFieldValue(field, value) {
@@ -67,7 +72,7 @@ function validateFieldValue(field, value) {
       if (typeof value !== "string") {
         throw new TypeError(`${field.displayName} must be a valid web address.`);
       }
-      return validateUrl(value.trim(), field.displayName);
+      return normalizeHttpsUrl(value, field.displayName);
     case "select":
       if (!field.options.choices.some(({ id }) => id === value)) {
         throw new TypeError(`${field.displayName} has an invalid selection.`);
@@ -120,7 +125,13 @@ export function createItemManagementOperations({
   generateId = defaultIdGenerator,
   now = () => new Date().toISOString()
 }) {
-  const requiredMethods = ["createItem", "listFieldDefinitions", "listGoodsTypes", "listItems"];
+  const requiredMethods = [
+    "createItem",
+    "getAsset",
+    "listFieldDefinitions",
+    "listGoodsTypes",
+    "listItems"
+  ];
 
   if (requiredMethods.some((methodName) => typeof storage?.[methodName] !== "function")) {
     throw new TypeError("Item management requires readable and writable item storage.");
@@ -136,25 +147,36 @@ export function createItemManagementOperations({
     return storage.listFieldDefinitions(goodsTypeId);
   }
 
-  async function createItem({ goodsTypeId, name, customValues = {} }) {
+  async function createItem({ goodsTypeId, name, customValues = {}, image = null }) {
     const fields = await getEntryFields(goodsTypeId);
+    const timestamp = now();
+    const asset = image
+      ? createAssetRecord(
+          {
+            ...image,
+            id: generateId()
+          },
+          { now: () => timestamp }
+        )
+      : null;
     const item = createItemRecord(
       {
         id: generateId(),
         goodsTypeId,
         name,
-        imageAssetId: null,
+        imageAssetId: asset?.id ?? null,
         customValues: normalizeItemValues(fields, customValues)
       },
-      { now }
+      { now: () => timestamp }
     );
 
-    await storage.createItem(item);
-    return structuredClone(item);
+    await storage.createItem({ asset, item });
+    return structuredClone({ asset, item });
   }
 
   return {
     createItem,
+    getAsset: (assetId) => storage.getAsset(assetId),
     getEntryFields,
     listItems: (goodsTypeId) => storage.listItems(goodsTypeId)
   };
