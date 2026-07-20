@@ -1,4 +1,4 @@
-const CACHE_NAME = "wotagoods-manager-v43";
+const CACHE_NAME = "wotagoods-manager-v44";
 
 const ASSET_GROUPS = {
   app: [
@@ -51,6 +51,18 @@ const ASSET_GROUPS = {
 };
 
 const APP_ASSETS = Object.values(ASSET_GROUPS).flat();
+const APP_ASSET_URLS = new Set(
+  APP_ASSETS.map((asset) => new URL(asset, self.location.href).href)
+);
+
+function getNormalizedRequestUrl(requestUrl) {
+  const url = new URL(requestUrl);
+
+  url.hash = "";
+  url.search = "";
+
+  return url.href;
+}
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
@@ -73,7 +85,9 @@ self.addEventListener("activate", (event) => {
 });
 
 self.addEventListener("fetch", (event) => {
-  if (event.request.method !== "GET") {
+  const requestUrl = getNormalizedRequestUrl(event.request.url);
+
+  if (event.request.method !== "GET" || !APP_ASSET_URLS.has(requestUrl)) {
     return;
   }
 
@@ -83,11 +97,11 @@ self.addEventListener("fetch", (event) => {
         const responseClone = networkResponse.clone();
 
         caches.open(CACHE_NAME).then((cache) => {
-          cache.put(event.request, responseClone);
+          cache.put(requestUrl, responseClone);
         });
 
         return networkResponse;
       })
-      .catch(() => caches.match(event.request))
+      .catch(() => caches.match(requestUrl))
   );
 });

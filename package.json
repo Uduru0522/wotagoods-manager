@@ -4,6 +4,8 @@
   "private": true,
   "description": "A local-first web app for managing multiple goods collections.",
   "scripts": {
-    "start": "node server.js"
+    "check": "node scripts/verify-static.js",
+    "start": "node server.js",
+    "start:pages": "node server.js --base-path=/wotagoods-manager/"
   }
 }

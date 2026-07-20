@@ -69,6 +69,8 @@ src/views/                 View definitions and renderer registry
 ## Useful Docs
 
 - [Architecture](docs/architecture.md): runtime flow, module boundaries, and extension points.
+- [Data Model](docs/data-model.md): planned database schema and mutation workflows.
+- [Deployment](docs/deployment.md): GitHub Pages setup and pre-push verification.
 - [Development Notes](docs/development.md): common tasks, conventions, and browser storage details.
 
 ## Common Changes

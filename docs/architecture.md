@@ -134,6 +134,8 @@ Current debug records already include the future table mapping:
 - `tableName`
 - `description`
 
+See `docs/data-model.md` for the full planned schema and mutation workflows.
+
 ## Service Worker
 
 `service-worker.js` caches app shell assets for local-first behavior. When paths change or cached app assets change, bump `CACHE_NAME` and update the asset lists.

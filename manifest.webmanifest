@@ -2,6 +2,7 @@
   "name": "Wotagoods Manager",
   "short_name": "Wotagoods",
   "description": "A local-first web app for managing multiple goods collections.",
+  "id": "./",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
