@@ -4,7 +4,7 @@ import { APP_CONFIG } from "./config.js";
 import { bindLayoutTransition } from "./layout-transition.js";
 import { bindViewScrollState } from "./view-scroll-state.js";
 import { createViewRouter } from "./view-router.js";
-import { loadGoodsTypes } from "../data/goods-types.js";
+import { createDebugGoodsTypes } from "../data/debug/debug-fixtures.js";
 import { createNavigation } from "../navigation/navigation.js";
 import { createThemeController } from "../services/theme.js";
 import { registerServiceWorker } from "../services/service-worker-registration.js";
@@ -15,7 +15,7 @@ import { createViewRenderer } from "../views/view-renderer.js";
 export function createApp() {
   const elements = getAppElements();
   const appMode = createAppMode();
-  const goodsTypes = loadGoodsTypes(appMode);
+  const goodsTypes = appMode.isDebugMode ? createDebugGoodsTypes() : [];
   const views = createViewDefinitions(goodsTypes);
   const themeController = createThemeController();
   const renderer = createViewRenderer({ goodsTypes, themeController });

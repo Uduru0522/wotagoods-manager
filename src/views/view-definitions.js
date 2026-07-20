@@ -4,10 +4,10 @@ function createGoodsTypeViews(goodsTypes) {
   return goodsTypes.flatMap((goodsType) => [
     {
       id: `goods:${goodsType.id}`,
-      label: goodsType.label,
+      label: goodsType.displayName,
       icon: "goodsType",
       section: "Goods type",
-      title: goodsType.label,
+      title: goodsType.displayName,
       renderer: RENDERERS.goodsType,
       nav: {
         group: NAV_GROUPS.primary,
@@ -20,8 +20,8 @@ function createGoodsTypeViews(goodsTypes) {
       id: `goods:${goodsType.id}:items`,
       label: "Item details",
       icon: "items",
-      section: goodsType.label,
-      title: `${goodsType.label} item details`,
+      section: goodsType.displayName,
+      title: `${goodsType.displayName} item details`,
       renderer: RENDERERS.goodsTypeChild,
       nav: {
         group: NAV_GROUPS.primary,
@@ -32,17 +32,17 @@ function createGoodsTypeViews(goodsTypes) {
       goodsType,
       action: "items",
       content: {
-        heading: `Browse and edit ${goodsType.label.toLowerCase()}.`,
+        heading: `Browse and edit ${goodsType.displayName.toLowerCase()}.`,
         description:
-          `This child view is prepared for the ${goodsType.tableName} table's item listing, filters, and edit workflow.`
+          "This view will provide item listing, filtering, and editing for the selected goods type."
       }
     },
     {
       id: `goods:${goodsType.id}:add`,
       label: "Add item",
       icon: "add",
-      section: goodsType.label,
-      title: `Add ${goodsType.label} item`,
+      section: goodsType.displayName,
+      title: `Add ${goodsType.displayName} item`,
       renderer: RENDERERS.goodsTypeChild,
       nav: {
         group: NAV_GROUPS.primary,
@@ -53,9 +53,9 @@ function createGoodsTypeViews(goodsTypes) {
       goodsType,
       action: "add",
       content: {
-        heading: `Register a new ${goodsType.label.toLowerCase()} item.`,
+        heading: `Register a new ${goodsType.displayName.toLowerCase()} item.`,
         description:
-          `This child view is prepared for an add form backed by the ${goodsType.tableName} table.`
+          "This view will build its form from the fields configured for the selected goods type."
       }
     }
   ]);
@@ -95,7 +95,7 @@ export function createViewDefinitions(goodsTypes) {
       content: {
         heading: "Goods types will be created here.",
         description:
-          "This view is reserved for database setup. The next implementation step is adding a goods-type form that writes to the goods_types table and generates a dedicated item table for that type."
+          "This view will create goods types and manage their custom fields in the local browser database."
       }
     },
     {

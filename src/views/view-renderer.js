@@ -1,5 +1,4 @@
 import { createElement } from "../shared/dom.js";
-import { GOODS_TYPE_COLUMNS, GOODS_TYPE_TABLE_NAME } from "../data/goods-types.js";
 import { RENDERERS } from "./view-metadata.js";
 import {
   createActionHint,
@@ -8,6 +7,12 @@ import {
   createSettingsSection,
   createSwitchSetting
 } from "../shared/ui-components.js";
+
+const GOODS_TYPE_COLUMNS = Object.freeze([
+  { key: "id", label: "ID" },
+  { key: "displayName", label: "Display name" },
+  { key: "description", label: "Description" }
+]);
 
 export function renderPlaceholderView(view) {
   const article = createElement("article", { className: "placeholder" });
@@ -22,10 +27,10 @@ export function renderPlaceholderView(view) {
 export function renderGoodsTypeView(view) {
   const { goodsType } = view;
   const article = createElement("article", { className: "content-panel goods-type-panel" });
-  const heading = createElement("h3", { textContent: `${goodsType.label} database area` });
+  const heading = createElement("h3", { textContent: `${goodsType.displayName} collection` });
   const description = createElement("p", {
     textContent:
-      "Selecting this goods type reveals the child views for item details and item registration. This metadata represents the table mapping the database layer will provide."
+      "Selecting this goods type reveals its item details and item registration views. Its custom fields will define the information stored for each item."
   });
 
   article.append(
@@ -33,8 +38,7 @@ export function renderGoodsTypeView(view) {
     description,
     createMetaList([
       { label: "Goods type ID", value: goodsType.id },
-      { label: "Goods type table", value: GOODS_TYPE_TABLE_NAME },
-      { label: "Generated item table", value: goodsType.tableName }
+      { label: "Description", value: goodsType.description || "No description" }
     ])
   );
 
@@ -57,7 +61,7 @@ export function renderAdministrationView(view, { goodsTypes }) {
   const schemaSection = createSettingsSection({
     title: "Goods type registry",
     description:
-      "Goods types are records in the goods_types table. Each goods type owns one generated item table."
+      "Goods types organize items and define the custom fields shown in forms and detail views."
   });
 
   if (goodsTypes.length > 0) {
@@ -78,7 +82,7 @@ export function renderAdministrationView(view, { goodsTypes }) {
   }
 
   overview.append(
-    createActionHint("Next action: implement the Administration form that creates goods types and generates item tables.")
+    createActionHint("Next action: add the Administration form for creating goods types.")
   );
   article.append(overview, schemaSection);
 

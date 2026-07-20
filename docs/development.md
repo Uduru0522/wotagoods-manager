@@ -85,23 +85,20 @@ Keep route/view IDs stable. They are used by navigation state and router state.
 
 ## Adding A Goods Type For Debug Mode
 
-Edit `DEBUG_GOODS_TYPES` in `src/data/goods-types.js`.
+Edit `GOODS_TYPE_FIXTURES` in `src/data/debug/debug-fixtures.js`.
 
-Use stable IDs. `tableName` remains temporary legacy metadata used by current
-placeholder rendering; it will be removed when the storage contract is added:
+Use stable IDs and domain-facing property names:
 
 ```js
 {
   id: "example_goods",
-  label: "Example goods",
-  tableName: "goods_example_goods",
+  displayName: "Example goods",
   description: "Short description."
 }
 ```
 
-This is only debug data. The persistence milestone will move these fixtures into
-an in-memory `DebugStorage` adapter and replace the temporary direct loader at the
-application composition root.
+This is only debug data. `DebugStorage` clones these records and never writes them
+to the user database.
 
 ## Theme Rules
 

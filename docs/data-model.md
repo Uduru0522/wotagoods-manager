@@ -449,7 +449,7 @@ backup before every ordinary field edit. Recommended progression:
 ## Planned File Boundaries
 
 The implementation should grow `src/data/` by responsibility rather than putting
-all persistence in `goods-types.js`:
+all persistence in one module:
 
 ```text
 src/data/

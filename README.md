@@ -30,7 +30,9 @@ The server prints both URLs when it starts.
 
 User mode is the default. It expects goods types to come from the future database layer, so the goods-type list is empty for now.
 
-Debug mode is enabled with `?debug=1`. It loads hardcoded goods types from `src/data/goods-types.js`. These values are not saved and are only for layout and flow testing.
+Debug mode is enabled with `?debug=1`. It loads hardcoded goods types from
+`src/data/debug/debug-fixtures.js`. These values are not saved and are only for
+layout and flow testing.
 
 ## Current Scope
 
@@ -58,7 +60,7 @@ icons/                     Web app icons
 src/main.js                Browser entry point
 src/app/                   App startup, config, mode, layout, routing
 src/bootstrap/             Tiny blocking scripts that run before first paint
-src/data/                  Data boundary and debug goods-type metadata
+src/data/                  Domain records, storage contracts, debug adapter
 src/navigation/            Primary nav, utility nav, scroll behavior
 src/services/              Browser services: storage, theme, service worker
 src/shared/                Generic DOM, icon, drag-scroll, UI helpers
@@ -77,7 +79,7 @@ src/views/                 View definitions and renderer registry
 
 - Add or modify views in `src/views/view-definitions.js`.
 - Add custom view markup in `src/views/view-renderer.js`.
-- Add debug goods types in `src/data/goods-types.js`.
+- Add debug goods types in `src/data/debug/debug-fixtures.js`.
 - Change app constants in `src/app/config.js`.
 - Change layout, colors, and motion in `src/styles/app.css`.
 

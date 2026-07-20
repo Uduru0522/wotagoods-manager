@@ -34,16 +34,16 @@ This duplicates a small part of `src/services/theme.js` on purpose. The service 
 
 ### `src/data/`
 
-Currently owns debug goods-type metadata. It will become the boundary between
-application operations and persistence.
+Owns domain records, storage contracts, and the current debug adapter. It will
+become the boundary between application operations and persistence.
 
-- `goods-types.js`: temporary debug records and the current loading integration
-  point.
+- `contracts/`: adapter capabilities and storage error definitions.
+- `debug/`: in-memory debug fixtures and adapter.
+- `models/`: domain record construction and validation.
 
 User mode currently returns no goods types because persistence is not implemented
-yet. Debug mode returns hardcoded goods types for UI testing. The persistence
-milestone will replace the direct loader with a storage contract and separate
-IndexedDB and in-memory debug adapters.
+yet. Debug mode returns hardcoded goods types for UI testing. Application startup
+will next select between IndexedDB and the in-memory debug adapter.
 
 ### `src/navigation/`
 
@@ -139,9 +139,6 @@ Views, navigation, and renderers must not import IndexedDB APIs or object-store
 names. They consume plain domain records and call application operations. This
 also keeps versioned file import/export and a future Google Drive snapshot adapter
 independent from UI components.
-
-The current debug-only `tableName` property is legacy placeholder metadata. It
-must not become part of the persistent domain model.
 
 See `docs/data-model.md` for object stores, record shapes, transaction rules,
 versioning, and mutation workflows.
