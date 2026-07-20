@@ -24,7 +24,8 @@ to temporary in-memory data that disappears when the page reloads.
 
 ## Add Item
 
-Status: modal shell implemented; generated fields and item persistence are planned.
+Status: generated fields, review, item persistence, and listing are implemented.
+Image selection, cropping, and asset persistence are planned.
 
 ```mermaid
 graph TD
@@ -52,6 +53,10 @@ graph TD
 
 The draft and cropped image stay in UI memory until confirmation. Allowed crop
 ratios are portrait `1:sqrt(2)` and horizontal `sqrt(2):1`.
+
+The current implementation follows the non-image path through validation and item
+persistence. Until image processing is implemented, new items store
+`imageAssetId: null`.
 
 ## Manage Fields
 

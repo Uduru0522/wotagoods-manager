@@ -48,6 +48,8 @@ Owns storage-neutral use cases that coordinate domain records and adapter calls.
   field-definition records for one atomic adapter write.
 - `data/reset-local-data.js`: requests one atomic clear of all user-data stores
   while leaving application metadata and external backups intact.
+- `items/manage-items.js`: loads active field definitions, validates submitted
+  values, constructs item records, and requests item persistence.
 
 Application operations may depend on domain models and storage contracts. They
 must not depend on DOM elements, IndexedDB object-store names, or view modules.
@@ -136,6 +138,8 @@ Owns view definitions and view rendering.
   orchestration into focused modules. Destructive local-data reset is isolated in
   its own typed-confirmation component.
 - `items/`: collection item-list views and the modal item-entry workflow.
+  Form generation, dialog orchestration, and list rendering remain separate so
+  image processing can extend the draft without changing persistence UI.
 
 ## View Model
 

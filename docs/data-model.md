@@ -200,9 +200,9 @@ Required asset metadata:
 - byte size
 - creation and update timestamps
 
-The first item-entry implementation will store only a processed low-resolution
-image. Image dimensions, output format, and compression quality remain decisions
-for that milestone.
+The current text-first item-entry increment stores `imageAssetId: null`. The image
+increment will store one processed low-resolution image. Image dimensions, output
+format, and compression quality remain decisions for that work.
 
 ## Soft Deletion
 

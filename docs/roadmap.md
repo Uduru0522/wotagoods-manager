@@ -51,15 +51,22 @@ order. It describes direction, not a release-date commitment.
 - reserve Overview for future per-collection summaries
 - reset all loaded collection data through typed confirmation
 
-## Current Product Milestone: Add Items
+## Completed Item Registration Core
 
 - generate forms from active field definitions
 - validate built-in and custom values
-- choose and crop one image to a supported paper ratio
-- keep form and processed-image drafts in memory until confirmation
+- keep form drafts in memory until confirmation
 - review the complete item before saving
-- write the item and optional image asset atomically
+- write validated item records to user or debug storage
 - retain input after recoverable failures
+- list newly registered items in their collection
+
+## Current Product Milestone: Item Images
+
+- choose and crop one image to a supported paper ratio
+- process a low-resolution browser-local image
+- write the item and optional image asset atomically
+- render item thumbnails without loading full-size source files
 
 ## Later Milestones
 

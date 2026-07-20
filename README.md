@@ -21,12 +21,14 @@ Implemented:
 - consolidated Overview and Items views for each goods type
 - modal item-entry shell launched from the Items view
 - typed reset of all browser-local collection data
+- generated item-entry forms with review and local persistence
+- collection item listing after registration
 - runtime navigation refresh after database changes
 - offline app-shell caching
 - automated static and unit checks
 - GitHub Pages deployment
 
-Item records and backup transfer are the next application features; their
+Image processing and backup transfer are the next application features; their
 contracts are documented but not yet implemented.
 
 ## Run Locally

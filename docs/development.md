@@ -52,6 +52,14 @@ For field-management changes:
 - reload after applying and confirm user-mode changes remain
 - reload debug mode and confirm field changes return to fixtures
 
+For item-registration changes:
+
+- add values for every supported custom field type and review them before saving
+- confirm required values are enforced after whitespace normalization
+- reload user mode and confirm saved items remain
+- reload debug mode and confirm created items disappear
+- confirm a failed save retains the item draft
+
 ## Browser Storage
 
 Settings are stored in browser `localStorage`, not in project files.
