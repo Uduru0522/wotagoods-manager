@@ -3,7 +3,13 @@ const path = require("node:path");
 const { spawnSync } = require("node:child_process");
 
 const projectRoot = path.resolve(__dirname, "..");
+const sourceDirectory = path.join(projectRoot, "src");
 const MAX_MOTION_DURATION_MS = 200;
+const LAYER_DEPENDENCIES = Object.freeze({
+  application: new Set(["application", "data"]),
+  data: new Set(["data"]),
+  shared: new Set(["shared"])
+});
 
 function collectJavaScriptFiles(directory) {
   return fs.readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
@@ -30,9 +36,63 @@ function toProjectAssetPath(absolutePath) {
   return `./${path.relative(projectRoot, absolutePath).split(path.sep).join("/")}`;
 }
 
+function getSourceLayer(filePath) {
+  const [layer] = path.relative(sourceDirectory, filePath).split(path.sep);
+  return layer;
+}
+
+function verifyLayerBoundaries(moduleGraph) {
+  moduleGraph.forEach((dependencies, sourcePath) => {
+    const sourceLayer = getSourceLayer(sourcePath);
+    const allowedLayers = LAYER_DEPENDENCIES[sourceLayer];
+
+    if (!allowedLayers) {
+      return;
+    }
+
+    dependencies.forEach((dependencyPath) => {
+      const dependencyLayer = getSourceLayer(dependencyPath);
+
+      if (!allowedLayers.has(dependencyLayer)) {
+        throw new Error(
+          `${toProjectAssetPath(sourcePath)} cannot import ${toProjectAssetPath(dependencyPath)}. ` +
+            `The ${sourceLayer} layer may only depend on: ${[...allowedLayers].join(", ")}.`
+        );
+      }
+    });
+  });
+}
+
+function verifyNoModuleCycles(moduleGraph) {
+  const states = new Map();
+  const activePath = [];
+
+  function visit(filePath) {
+    if (states.get(filePath) === "visited") {
+      return;
+    }
+
+    if (states.get(filePath) === "visiting") {
+      const cycleStart = activePath.indexOf(filePath);
+      const cycle = [...activePath.slice(cycleStart), filePath]
+        .map(toProjectAssetPath)
+        .join(" -> ");
+      throw new Error(`Circular module dependency detected: ${cycle}`);
+    }
+
+    states.set(filePath, "visiting");
+    activePath.push(filePath);
+    (moduleGraph.get(filePath) ?? []).forEach(visit);
+    activePath.pop();
+    states.set(filePath, "visited");
+  }
+
+  moduleGraph.forEach((_, filePath) => visit(filePath));
+}
+
 function verifyJavaScriptSyntax() {
   const files = [
-    ...collectJavaScriptFiles(path.join(projectRoot, "src")),
+    ...collectJavaScriptFiles(sourceDirectory),
     path.join(projectRoot, "server.js"),
     path.join(projectRoot, "service-worker.js")
   ];
@@ -57,6 +117,38 @@ function verifyDocumentAssets() {
   }
 }
 
+function verifyMarkdownLinks() {
+  const markdownFiles = [
+    path.join(projectRoot, "README.md"),
+    ...fs
+      .readdirSync(path.join(projectRoot, "docs"))
+      .filter((fileName) => fileName.endsWith(".md"))
+      .map((fileName) => path.join(projectRoot, "docs", fileName))
+  ];
+  const linkPattern = /!?\[[^\]]*\]\(([^)\s]+)(?:\s+"[^"]*")?\)/g;
+
+  markdownFiles.forEach((markdownPath) => {
+    const sourceCode = fs.readFileSync(markdownPath, "utf8");
+
+    for (const match of sourceCode.matchAll(linkPattern)) {
+      const target = match[1].replace(/^<|>$/g, "");
+
+      if (target.startsWith("#") || /^[a-z][a-z\d+.-]*:/i.test(target)) {
+        continue;
+      }
+
+      const relativePath = decodeURIComponent(target.split("#", 1)[0]);
+      const linkedPath = path.resolve(path.dirname(markdownPath), relativePath);
+
+      if (!fs.existsSync(linkedPath)) {
+        throw new Error(
+          `${toProjectAssetPath(markdownPath)} references missing document: ${target}`
+        );
+      }
+    }
+  });
+}
+
 function getModuleSpecifiers(sourceCode) {
   const specifiers = [];
   const staticImportPattern = /\b(?:import|export)\s+(?:[^"'()]*?\s+from\s*)?["']([^"']+)["']/g;
@@ -75,12 +167,13 @@ function getModuleSpecifiers(sourceCode) {
 
 function verifyModuleGraph() {
   const indexHtml = fs.readFileSync(path.join(projectRoot, "index.html"), "utf8");
-  const sourceRoot = `${path.join(projectRoot, "src")}${path.sep}`;
+  const sourceRoot = `${sourceDirectory}${path.sep}`;
   const scriptPattern = /<script\b[^>]*\bsrc="(?!https?:)([^"]+)"[^>]*>/g;
   const pendingFiles = [...indexHtml.matchAll(scriptPattern)].map((match) =>
     path.resolve(projectRoot, match[1])
   );
   const visitedFiles = new Set();
+  const moduleGraph = new Map();
 
   while (pendingFiles.length > 0) {
     const filePath = pendingFiles.pop();
@@ -96,6 +189,7 @@ function verifyModuleGraph() {
     visitedFiles.add(filePath);
 
     const sourceCode = fs.readFileSync(filePath, "utf8");
+    const dependencies = [];
 
     getModuleSpecifiers(sourceCode).forEach((specifier) => {
       if (!specifier.startsWith(".")) {
@@ -117,11 +211,17 @@ function verifyModuleGraph() {
         );
       }
 
+      dependencies.push(importedPath);
       pendingFiles.push(importedPath);
     });
+
+    moduleGraph.set(filePath, dependencies);
   }
 
-  const sourceFiles = collectJavaScriptFiles(path.join(projectRoot, "src"));
+  verifyNoModuleCycles(moduleGraph);
+  verifyLayerBoundaries(moduleGraph);
+
+  const sourceFiles = collectJavaScriptFiles(sourceDirectory);
   const unreachableFiles = sourceFiles.filter((filePath) => !visitedFiles.has(filePath));
 
   if (unreachableFiles.length > 0) {
@@ -218,6 +318,7 @@ function verifyMotionDurations() {
 try {
   verifyJavaScriptSyntax();
   verifyDocumentAssets();
+  verifyMarkdownLinks();
   const runtimeModules = verifyModuleGraph();
   verifyManifestAssets();
   const serviceWorkerAssets = verifyServiceWorkerAssets();
