@@ -71,7 +71,8 @@ In browser DevTools, verify:
 - Reloading after enabling offline mode still opens the app shell.
 - Dark mode survives a reload.
 
-Localhost and GitHub Pages are different browser origins. Their browser storage and future IndexedDB databases will be separate.
+Localhost and GitHub Pages are different browser origins. Their settings and
+IndexedDB databases are separate.
 
 ## After Push
 

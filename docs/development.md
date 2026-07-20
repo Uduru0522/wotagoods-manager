@@ -65,7 +65,7 @@ database even while it contains no records. Debug mode uses a separate in-memory
 adapter and never opens or writes the user database.
 
 Browser storage is origin-specific. These locations do not share settings or
-future IndexedDB data:
+IndexedDB data:
 
 ```text
 http://localhost:4173/
@@ -147,3 +147,11 @@ When moving or adding app files that must work offline:
 3. Verify the moved file is served by the local server.
 
 Docs are not currently cached by the service worker.
+
+## Related Design Documents
+
+- `docs/data-model.md`: domain records and invariants
+- `docs/persistence.md`: adapters, physical schema, and transaction rules
+- `docs/workflows.md`: planned mutation UX
+- `docs/data-portability.md`: export, import, and cloud snapshots
+- `docs/roadmap.md`: current and upcoming milestones

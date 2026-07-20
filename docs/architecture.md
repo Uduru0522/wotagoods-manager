@@ -45,7 +45,9 @@ Owns domain records, storage contracts, and the current debug adapter. It will
 become the boundary between application operations and persistence.
 
 - `contracts/`: adapter capabilities and storage error definitions.
+- `create-storage.js`: mode-aware adapter selection.
 - `debug/`: in-memory debug fixtures and adapter.
+- `indexeddb/`: physical schema, database lifecycle, and persistent adapter.
 - `models/`: domain record construction and validation.
 
 User mode opens the versioned IndexedDB database and currently returns no goods
@@ -131,13 +133,13 @@ Options uses:
 nav: { group: "utility" }
 ```
 
-## Data Model Direction
+## Data Persistence
 
 User mode uses IndexedDB through an application-owned storage contract.
 Physical object stores remain stable; goods types, field definitions, and custom
 values are records rather than generated database tables.
 
-Planned storage adapters:
+Current storage adapters:
 
 - `IndexedDbStorage`: persistent browser-local user data.
 - `DebugStorage`: in-memory fixtures that never write user data.
@@ -147,8 +149,8 @@ names. They consume plain domain records and call application operations. This
 also keeps versioned file import/export and a future Google Drive snapshot adapter
 independent from UI components.
 
-See `docs/data-model.md` for object stores, record shapes, transaction rules,
-versioning, and mutation workflows.
+See `docs/data-model.md` for domain records, `docs/persistence.md` for object
+stores and transaction rules, and `docs/workflows.md` for planned mutations.
 
 ### Persistence Integration Constraints
 

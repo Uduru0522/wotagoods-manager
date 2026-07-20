@@ -1,94 +1,105 @@
 # Wotagoods Manager
 
-A local-first web app shell for managing multiple types of goods.
+A local-first web application for organizing multiple types of collectible goods.
 
-The current project includes the application shell, isolated debug data, and the
-versioned IndexedDB persistence foundation. Goods-type and item mutation forms
-are not implemented yet.
+The application runs from GitHub Pages or a local static server. User collections
+belong to the current browser profile and are stored in IndexedDB. Debug mode uses
+temporary fixtures and never writes to the user database.
 
-## Quick Start
+## Current Status
 
-This project has no external dependencies.
+Implemented:
+
+- responsive application shell and view navigation
+- light and dark themes
+- user and debug runtime modes
+- versioned IndexedDB schema initialization
+- isolated in-memory debug storage
+- offline app-shell caching
+- automated static and unit checks
+- GitHub Pages deployment
+
+Goods-type creation, custom fields, item records, and backup transfer are the next
+application features; their contracts are documented but not yet implemented.
+
+## Run Locally
+
+This project has no external runtime dependencies.
 
 ```powershell
 npm start
 ```
 
-Open the app:
+Open:
 
 ```text
-http://localhost:4173
+User mode:  http://localhost:4173/
+Debug mode: http://localhost:4173/?debug=1
 ```
 
-Open debug mode with sample goods types:
+To reproduce the GitHub Pages repository path locally:
+
+```powershell
+npm run start:pages
+```
+
+Then open `http://localhost:4173/wotagoods-manager/`.
+
+## Verify Changes
+
+```powershell
+npm run check
+```
+
+This checks JavaScript syntax and static asset references, then runs the
+dependency-free `node:test` suite.
+
+## Hosted Application
+
+- [User mode](https://uduru0522.github.io/wotagoods-manager/)
+- [Debug mode](https://uduru0522.github.io/wotagoods-manager/?debug=1)
+
+The hosted and local URLs are different browser origins and therefore have
+separate settings and IndexedDB databases.
+
+## Repository Map
 
 ```text
-http://localhost:4173?debug=1
+.github/workflows/     GitHub Pages deployment
+docs/                  Architecture, development, and product design
+icons/                 Installable-app icons
+scripts/               Repository verification scripts
+src/app/               Startup, shell behavior, routing, layout
+src/bootstrap/         Scripts that run before first paint
+src/data/              Domain records and storage adapters
+src/navigation/        Primary and utility navigation
+src/services/          Browser services
+src/shared/            Domain-independent UI helpers
+src/styles/            Design tokens, layout, and component styling
+src/views/             View definitions and renderers
+test/                  Dependency-free unit tests
+index.html             Document shell
+manifest.webmanifest   Installable-app metadata
+server.js              Local static server
+service-worker.js      Offline app-shell cache
 ```
 
-The server prints both URLs when it starts.
+## Documentation
 
-## Modes
+Start with the [documentation index](docs/README.md). The most relevant documents
+for implementation work are:
 
-User mode is the default. It opens the local IndexedDB database, but the
-goods-type list remains empty until the creation form is implemented.
+- [Architecture](docs/architecture.md)
+- [Domain Model](docs/data-model.md)
+- [Persistence](docs/persistence.md)
+- [Planned Workflows](docs/workflows.md)
+- [Roadmap](docs/roadmap.md)
 
-Debug mode is enabled with `?debug=1`. It loads hardcoded goods types from
-`src/data/debug/debug-fixtures.js`. These values are not saved and are only for
-layout and flow testing.
+## Contribution Rules
 
-## Current Scope
-
-- Dashboard view.
-- Goods-type navigation section.
-- Per-type Item details child view.
-- Per-type Add item child view.
-- Administration view prepared for goods-type setup.
-- Options view for app settings.
-- Dark mode persisted in browser `localStorage`.
-- Responsive wide/sidebar and narrow/top-navigation layouts.
-- Local web app manifest and service worker registration.
-- Versioned IndexedDB initialization in user mode.
-- Isolated in-memory storage in debug mode.
-
-## Project Map
-
-```text
-index.html                 App document shell
-manifest.webmanifest       Installable web app metadata
-package.json               npm scripts and project metadata
-server.js                  Dependency-free local static server
-service-worker.js          Offline/local-first asset cache
-
-docs/                      Contributor documentation
-icons/                     Web app icons
-src/main.js                Browser entry point
-src/app/                   App startup, config, mode, layout, routing
-src/bootstrap/             Tiny blocking scripts that run before first paint
-src/data/                  Domain records, storage contracts, debug adapter
-src/navigation/            Primary nav, utility nav, scroll behavior
-src/services/              Browser services: storage, theme, service worker
-src/shared/                Generic DOM, icon, drag-scroll, UI helpers
-src/styles/                CSS tokens, layout, responsive rules, animation
-src/views/                 View definitions and renderer registry
-```
-
-## Useful Docs
-
-- [Architecture](docs/architecture.md): runtime flow, module boundaries, and extension points.
-- [Data Model](docs/data-model.md): planned database schema and mutation workflows.
-- [Deployment](docs/deployment.md): GitHub Pages setup and pre-push verification.
-- [Development Notes](docs/development.md): common tasks, conventions, and browser storage details.
-
-## Common Changes
-
-- Add or modify views in `src/views/view-definitions.js`.
-- Add custom view markup in `src/views/view-renderer.js`.
-- Add debug goods types in `src/data/debug/debug-fixtures.js`.
-- Change app constants in `src/app/config.js`.
-- Change layout, colors, and motion in `src/styles/app.css`.
-
-Do not treat debug data as persistence. The planned user-mode database is
-IndexedDB behind a storage contract, with a separate in-memory debug adapter. See
-[Data Model](docs/data-model.md) for the persistence design and implementation
-sequence.
+- Keep user data local unless an explicit transfer operation is requested.
+- Never let debug mode open or write the user database.
+- Keep browser APIs behind services or storage adapters.
+- Add or update tests for changed domain and persistence behavior.
+- Update `service-worker.js` and bump its cache name when runtime files move.
+- Prefer small commits that remain understandable and verifiable on their own.
