@@ -177,4 +177,9 @@ test("DebugStorage creates goods types in memory without partial invalid writes"
     (error) => error.code === STORAGE_ERROR_CODES.invalidData
   );
   assert.deepEqual((await storage.listGoodsTypes()).map(({ id }) => id), ["figures"]);
+
+  await assert.rejects(
+    storage.createGoodsType({ goodsType: { id: "invalid" }, fieldDefinitions: [] }),
+    (error) => error instanceof StorageError && error.code === STORAGE_ERROR_CODES.invalidData
+  );
 });

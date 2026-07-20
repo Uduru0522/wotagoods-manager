@@ -124,7 +124,15 @@ export function createGoodsTypeCreator({
 
     nameField.input.value = draft.displayName;
     descriptionField.input.value = draft.description;
-    nameField.input.toggleAttribute("data-invalid", !draft.displayName.trim());
+
+    function syncNameValidity() {
+      const isInvalid = !nameField.input.value.trim();
+
+      nameField.input.toggleAttribute("data-invalid", isInvalid);
+      nameField.input.setAttribute("aria-invalid", String(isInvalid));
+    }
+
+    syncNameValidity();
 
     heading.append(
       createElement("h3", { textContent: "New goods type" }),
@@ -134,7 +142,7 @@ export function createGoodsTypeCreator({
     );
     cancelButton.addEventListener("click", renderLanding);
     nameField.input.addEventListener("input", () => {
-      nameField.input.toggleAttribute("data-invalid", !nameField.input.value.trim());
+      syncNameValidity();
       feedback.textContent = "";
     });
     form.addEventListener("submit", (event) => {
@@ -146,7 +154,7 @@ export function createGoodsTypeCreator({
       };
 
       if (!nextDraft.displayName) {
-        nameField.input.toggleAttribute("data-invalid", true);
+        syncNameValidity();
         feedback.textContent = "Enter a display name before continuing.";
         nameField.input.focus();
         return;

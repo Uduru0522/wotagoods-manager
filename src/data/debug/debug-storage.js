@@ -39,8 +39,19 @@ export function createDebugStorage({
   async function createGoodsType({ goodsType, fieldDefinitions: newFields }) {
     assertInitialized();
 
-    const parsedGoodsType = parseGoodsTypeRecord(goodsType);
-    const parsedFields = newFields.map(parseFieldDefinitionRecord);
+    let parsedGoodsType;
+    let parsedFields;
+
+    try {
+      parsedGoodsType = parseGoodsTypeRecord(goodsType);
+      parsedFields = newFields.map(parseFieldDefinitionRecord);
+    } catch (error) {
+      throw new StorageError("The goods type write contains invalid data.", {
+        cause: error,
+        code: STORAGE_ERROR_CODES.invalidData
+      });
+    }
+
     const existingIds = new Set([
       ...records.map(({ id }) => id),
       ...fieldRecords.map(({ id }) => id)

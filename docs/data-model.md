@@ -47,7 +47,7 @@ erDiagram
     boolean isRequired
     boolean isBuiltIn
     number position
-    object defaultValue
+    json defaultValue
     object options
     boolean isDeleted
     datetime deletedAt
