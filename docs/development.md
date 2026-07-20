@@ -44,6 +44,14 @@ For persistence changes, create a goods type in each mode and reload:
 - successful creation must open the new goods-type view
 - a duplicate display name may warn but must not be blocked
 
+For field-management changes:
+
+- confirm protected fields have no edit or removal commands
+- stage several additions, edits, removals, and order changes before applying
+- confirm changing views discards unapplied staging without database writes
+- reload after applying and confirm user-mode changes remain
+- reload debug mode and confirm field changes return to fixtures
+
 ## Browser Storage
 
 Settings are stored in browser `localStorage`, not in project files.

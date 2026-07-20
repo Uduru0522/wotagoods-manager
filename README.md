@@ -17,13 +17,14 @@ Implemented:
 - isolated in-memory debug storage
 - Administration workflow for creating goods types
 - atomic goods-type and protected-field persistence
+- staged custom-field management with atomic apply
 - runtime navigation refresh after database changes
 - offline app-shell caching
 - automated static and unit checks
 - GitHub Pages deployment
 
-Custom fields, item records, and backup transfer are the next application
-features; their contracts are documented but not yet implemented.
+Item records and backup transfer are the next application features; their
+contracts are documented but not yet implemented.
 
 ## Run Locally
 

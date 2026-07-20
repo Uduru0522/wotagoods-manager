@@ -53,7 +53,7 @@ ratios are portrait `1:sqrt(2)` and horizontal `sqrt(2):1`.
 
 ## Manage Fields
 
-Status: planned and the next product milestone.
+Status: implemented.
 
 Use **Manage fields** in visible UI. Do not expose terms such as column, object
 store, or schema migration to ordinary users.
@@ -91,6 +91,11 @@ Rules:
 - `id` and `name` cannot become optional
 - deleting a field preserves existing item values
 - the complete staged set is validated before opening a transaction
+
+The current UI supports text, long text, number, date, yes/no, web-address, and
+selection-list fields. Internal keys are generated once and are not exposed to
+ordinary users. Selection options receive stable IDs. Existing options may be
+extended but not removed.
 
 Safe initial modifications:
 

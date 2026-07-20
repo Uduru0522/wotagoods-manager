@@ -35,7 +35,7 @@ order. It describes direction, not a release-date commitment.
 - retain debug-mode isolation
 - add mutation progress and recoverable failure UI
 
-## Current Product Milestone: Manage Custom Fields
+## Completed Manage Custom Fields Milestone
 
 - list active field definitions for a selected goods type
 - add text, number, date, boolean, URL, and select fields
@@ -44,14 +44,23 @@ order. It describes direction, not a release-date commitment.
 - apply each reviewed change set atomically
 - retain staged input after recoverable failures
 
+## Current Product Milestone: Add Items
+
+- generate forms from active field definitions
+- validate built-in and custom values
+- choose and crop one image to a supported paper ratio
+- keep form and processed-image drafts in memory until confirmation
+- review the complete item before saving
+- write the item and optional image asset atomically
+- retain input after recoverable failures
+
 ## Later Milestones
 
-1. Add items and cropped image assets.
-2. Browse, filter, and edit items.
-3. Restore and purge soft-deleted records.
-4. Export and validated import.
-5. Optional Google Drive snapshots.
-6. Evaluate live synchronization only after conflict semantics exist.
+1. Browse, filter, and edit items.
+2. Restore and purge soft-deleted records.
+3. Export and validated import.
+4. Optional Google Drive snapshots.
+5. Evaluate live synchronization only after conflict semantics exist.
 
 ## Deliberate Non-Goals
 

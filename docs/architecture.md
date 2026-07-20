@@ -44,6 +44,8 @@ Owns storage-neutral use cases that coordinate domain records and adapter calls.
 
 - `goods-types/create-goods-type.js`: constructs one goods type and its protected
   field definitions, then requests one atomic storage write.
+- `fields/manage-fields.js`: validates staged field changes and converts them into
+  field-definition records for one atomic adapter write.
 
 Application operations may depend on domain models and storage contracts. They
 must not depend on DOM elements, IndexedDB object-store names, or view modules.
@@ -122,6 +124,8 @@ Owns view definitions and view rendering.
 - `view-metadata.js`: shared constants for view IDs, nav groups, nav kinds, and renderer keys.
 - `view-renderer.js`: renderer registry and markup for placeholder, goods type, administration, and options views.
 - `administration/`: Administration rendering and the goods-type creation flow.
+  Its field manager separates staging state, list rendering, editing, review, and
+  orchestration into focused modules.
 
 ## View Model
 

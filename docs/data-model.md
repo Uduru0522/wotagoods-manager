@@ -135,6 +135,19 @@ relation
 `key` is a stable identifier unique within one goods type. `displayName` is
 editable. `position` gives forms and details deterministic field order.
 
+Selection fields store stable option identities:
+
+```js
+options: {
+  choices: [
+    { id: "stable-option-id", label: "Owned" }
+  ]
+}
+```
+
+Labels may be added, but option removal and identity-changing edits remain
+deferred until item-value migration rules exist.
+
 ### Built-In Item Fields
 
 | Field | Required | User editable | Deletable |
@@ -146,8 +159,8 @@ editable. `position` gives forms and details deterministic field order.
 `createdAt`, `updatedAt`, `isDeleted`, and `deletedAt` are system properties.
 Goods-type creation stores all three built-in field records so future renderers
 can process built-in and custom fields through one path. The creation operation
-sets their protected metadata; future field-management operations must reject
-changes that violate these rules.
+sets their protected metadata; field-management operations reject changes that
+violate these rules.
 
 ## Item And Custom Values
 
