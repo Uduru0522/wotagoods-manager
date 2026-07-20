@@ -42,7 +42,7 @@ function createHarness({ storages }) {
     indexedDBFactory: undefined,
     isDebugMode: false,
     logger: { error() {} },
-    mountApplication: (goodsTypes) => mounted.push(goodsTypes),
+    mountApplication: (context) => mounted.push(context),
     renderError: (error, options) => {
       errors.push(error);
       retry = options.onRetry;
@@ -70,7 +70,11 @@ test("startup coordinator initializes storage before mounting", async () => {
   await harness.coordinator.start();
 
   assert.equal(harness.loadingCount, 1);
-  assert.deepEqual(harness.mounted, [[{ id: "figures" }]]);
+  assert.deepEqual(harness.mounted, [{
+    goodsTypes: [{ id: "figures" }],
+    initialViewId: undefined,
+    storage
+  }]);
   assert.deepEqual(harness.errors, []);
 });
 
@@ -89,7 +93,11 @@ test("startup coordinator exposes a retry after failure", async () => {
 
   assert.deepEqual(harness.errors, [failure]);
   assert.equal(failedStorage.closeCount, 1);
-  assert.deepEqual(harness.mounted, [[{ id: "recovered" }]]);
+  assert.deepEqual(harness.mounted, [{
+    goodsTypes: [{ id: "recovered" }],
+    initialViewId: undefined,
+    storage: recoveredStorage
+  }]);
 });
 
 test("stopping startup prevents a late initialization from mounting", async () => {
@@ -105,4 +113,30 @@ test("stopping startup prevents a late initialization from mounting", async () =
   assert.equal(storage.closeCount, 2);
   assert.deepEqual(harness.mounted, []);
   assert.deepEqual(harness.errors, []);
+});
+
+test("refresh remounts from active storage without reinitializing it", async () => {
+  const goodsTypes = [{ id: "figures" }];
+  let initializationCount = 0;
+  const storage = createStorage({
+    goodsTypes,
+    initialize: async () => {
+      initializationCount += 1;
+    }
+  });
+  const harness = createHarness({ storages: [storage] });
+
+  await harness.coordinator.start();
+  goodsTypes.push({ id: "tapestries" });
+  const didRefresh = await harness.coordinator.refresh({
+    initialViewId: "goods:tapestries"
+  });
+
+  assert.equal(didRefresh, true);
+  assert.equal(initializationCount, 1);
+  assert.deepEqual(harness.mounted[1], {
+    goodsTypes,
+    initialViewId: "goods:tapestries",
+    storage
+  });
 });

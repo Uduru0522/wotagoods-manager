@@ -14,12 +14,22 @@ export function createApp({ storageFactory = createAppStorage } = {}) {
   const elements = getAppElements();
   const appMode = createAppMode();
   const themeController = createThemeController();
-  const startupCoordinator = createStartupCoordinator({
+  let startupCoordinator;
+
+  startupCoordinator = createStartupCoordinator({
     createStorage: storageFactory,
     indexedDBFactory: globalThis.indexedDB,
     isDebugMode: appMode.isDebugMode,
-    mountApplication: (goodsTypes) =>
-      mountAppRuntime({ elements, goodsTypes, themeController }),
+    mountApplication: ({ goodsTypes, initialViewId, storage }) =>
+      mountAppRuntime({
+        elements,
+        goodsTypes,
+        initialViewId,
+        onGoodsTypeCreated: (goodsTypeId) =>
+          startupCoordinator.refresh({ initialViewId: `goods:${goodsTypeId}` }),
+        storage,
+        themeController
+      }),
     renderError: (error, options) => renderStartupError(elements, error, options),
     renderLoading: () => renderStartupLoading(elements)
   });

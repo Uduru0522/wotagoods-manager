@@ -11,6 +11,17 @@ export function createStartupCoordinator({
   let attemptNumber = 0;
   let isStopped = false;
 
+  async function mountFromStorage(storage, currentAttempt, initialViewId) {
+    const goodsTypes = await storage.listGoodsTypes();
+
+    if (currentAttempt !== attemptNumber || isStopped) {
+      return false;
+    }
+
+    mountApplication({ goodsTypes, initialViewId, storage });
+    return true;
+  }
+
   async function load() {
     if (isStopped) {
       return;
@@ -26,14 +37,11 @@ export function createStartupCoordinator({
 
       activeStorage = storage;
       await storage.initialize();
-      const goodsTypes = await storage.listGoodsTypes();
+      const didMount = await mountFromStorage(storage, currentAttempt);
 
-      if (currentAttempt !== attemptNumber || isStopped) {
+      if (!didMount) {
         storage.close();
-        return;
       }
-
-      mountApplication(goodsTypes);
     } catch (error) {
       if (currentAttempt !== attemptNumber || isStopped) {
         return;
@@ -49,6 +57,15 @@ export function createStartupCoordinator({
     return load();
   }
 
+  async function refresh({ initialViewId } = {}) {
+    if (isStopped || !activeStorage) {
+      return false;
+    }
+
+    const currentAttempt = ++attemptNumber;
+    return mountFromStorage(activeStorage, currentAttempt, initialViewId);
+  }
+
   function stop() {
     isStopped = true;
     attemptNumber += 1;
@@ -57,6 +74,7 @@ export function createStartupCoordinator({
   }
 
   return {
+    refresh,
     start,
     stop
   };

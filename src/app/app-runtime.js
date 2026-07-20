@@ -3,10 +3,23 @@ import { createViewRouter } from "./view-router.js";
 import { createNavigation } from "../navigation/navigation.js";
 import { createViewDefinitions } from "../views/view-definitions.js";
 import { createViewRenderer } from "../views/view-renderer.js";
+import { createGoodsTypeCreationOperation } from "../application/goods-types/create-goods-type.js";
 
-export function mountAppRuntime({ elements, goodsTypes, themeController }) {
+export function mountAppRuntime({
+  elements,
+  goodsTypes,
+  initialViewId = APP_CONFIG.defaultViewId,
+  onGoodsTypeCreated,
+  storage,
+  themeController
+}) {
   const views = createViewDefinitions(goodsTypes);
-  const renderer = createViewRenderer({ goodsTypes, themeController });
+  const renderer = createViewRenderer({
+    createGoodsType: createGoodsTypeCreationOperation({ storage }),
+    goodsTypes,
+    onGoodsTypeCreated,
+    themeController
+  });
   let router;
 
   const navigation = createNavigation({
@@ -26,5 +39,5 @@ export function mountAppRuntime({ elements, goodsTypes, themeController }) {
   });
 
   navigation.render();
-  router.setActiveView(APP_CONFIG.defaultViewId);
+  router.setActiveView(initialViewId);
 }
