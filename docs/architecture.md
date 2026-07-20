@@ -101,9 +101,11 @@ Owns browser/platform services.
 Generic helpers that should not know about Wotagoods-specific features.
 
 - `dom.js`: small DOM creation helper.
+- `action-button.js`: consistent construction of text action buttons.
 - `content-transition.js`: reusable two-phase transitions for stateful workflow content.
 - `drag-scroll.js`: reusable pointer drag scrolling.
 - `icons.js`: icon creation.
+- `motion.js`: CSS timing parsing and reduced-motion helpers.
 - `ui-components.js`: reusable view components.
 
 ### `src/styles/`
@@ -127,7 +129,8 @@ Owns view definitions and view rendering.
 
 - `view-definitions.js`: source of truth for view IDs, titles, sections, nav metadata, and renderer keys.
 - `view-metadata.js`: shared constants for view IDs, nav groups, nav kinds, and renderer keys.
-- `view-renderer.js`: renderer registry and markup for placeholder, goods type, administration, and options views.
+- `view-renderer.js`: renderer registry for dashboard, goods overview, items,
+  administration, and options views.
 - `administration/`: Administration rendering and the goods-type creation flow.
   Its field manager separates staging state, list rendering, editing, review, and
   orchestration into focused modules. Destructive local-data reset is isolated in
@@ -197,6 +200,10 @@ domain errors.
 
 ## Service Worker
 
-`service-worker.js` caches app shell assets for local-first behavior. When paths change or cached app assets change, bump `CACHE_NAME` and update the asset lists.
+`service-worker.js` caches app shell assets for local-first behavior. When paths
+change or cached app assets change, bump `CACHE_NAME` and update the asset lists.
+Registration bypasses the HTTP cache when checking for worker updates. A newly
+installed worker activates promptly, but the app does not force-reload an open
+page because doing so could discard an in-progress draft.
 
 The service worker intentionally lists module paths explicitly. That makes moved files visible during review and avoids hidden build steps.

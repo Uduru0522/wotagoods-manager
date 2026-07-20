@@ -44,6 +44,13 @@ order. It describes direction, not a release-date commitment.
 - apply each reviewed change set atomically
 - retain staged input after recoverable failures
 
+## Completed Collection Workflow Shell
+
+- keep one Overview and one Items view per goods type
+- launch item registration as a modal workflow from Items
+- reserve Overview for future per-collection summaries
+- reset all loaded collection data through typed confirmation
+
 ## Current Product Milestone: Add Items
 
 - generate forms from active field definitions

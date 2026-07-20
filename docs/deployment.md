@@ -77,3 +77,11 @@ IndexedDB databases are separate.
 ## After Push
 
 Open the repository's **Actions** tab and confirm the `Deploy to GitHub Pages` workflow succeeds. Then repeat the browser checks at the production URL.
+
+The service worker checks for a new deployment when the page loads, but it does
+not force a reload that could discard draft input. Use a hard refresh before
+testing a newly deployed build.
+
+For a milestone release, create the version tag only after `main` is deployed and
+the hosted user and debug modes pass their smoke checks. Keep the package version
+and release tag aligned, for example package version `0.2.0` and tag `v0.2.0`.

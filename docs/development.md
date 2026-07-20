@@ -28,9 +28,9 @@ Run the complete static and unit-test suite:
 npm run check
 ```
 
-`npm run check` validates JavaScript syntax, the browser import graph, referenced
-assets, and offline-cache coverage, then runs the dependency-free `node:test`
-suite in `test/`.
+`npm run check` validates JavaScript syntax, browser import reachability,
+dependency cycles and layer boundaries, referenced assets, and offline-cache
+coverage, then runs the dependency-free `node:test` suite in `test/`.
 
 After runtime or layout changes, start the server and verify:
 
@@ -147,7 +147,21 @@ Stateful workflows should use `src/shared/content-transition.js`. One `--motion-
 is used before replacement and one after it, so their combined duration must remain
 within the same `200ms` ceiling.
 
+JavaScript fallbacks for CSS timing belong in `src/shared/motion.js`. Text action
+buttons should use `src/shared/action-button.js` so default type and class behavior
+remain consistent.
+
 Responsive behavior currently has one breakpoint at `760px`, matching `APP_CONFIG.layout.narrowQuery`.
+
+## Dependency Rules
+
+- `src/shared/` may only import other shared modules.
+- `src/data/` may only import data modules.
+- `src/application/` may import application and data modules.
+- Browser composition folders may combine these layers, but circular imports are
+  rejected everywhere.
+
+These constraints are enforced by `scripts/verify-static.js`.
 
 ## Drag Scrolling
 
@@ -173,6 +187,10 @@ When moving or adding app files that must work offline:
 3. Verify the moved file is served by the local server.
 
 Docs are not currently cached by the service worker.
+
+The worker checks for updates without the browser HTTP cache. It activates new
+assets without automatically reloading an open page, so use a hard refresh when
+validating a freshly deployed version.
 
 ## Related Design Documents
 

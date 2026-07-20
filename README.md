@@ -18,6 +18,9 @@ Implemented:
 - Administration workflow for creating goods types
 - atomic goods-type and protected-field persistence
 - staged custom-field management with atomic apply
+- consolidated Overview and Items views for each goods type
+- modal item-entry shell launched from the Items view
+- typed reset of all browser-local collection data
 - runtime navigation refresh after database changes
 - offline app-shell caching
 - automated static and unit checks
@@ -55,8 +58,8 @@ Then open `http://localhost:4173/wotagoods-manager/`.
 npm run check
 ```
 
-This checks JavaScript syntax and static asset references, then runs the
-dependency-free `node:test` suite.
+This checks JavaScript syntax, import boundaries and cycles, static asset
+references, and offline coverage, then runs the dependency-free `node:test` suite.
 
 ## Hosted Application
 
