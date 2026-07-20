@@ -1,4 +1,5 @@
-import { CUSTOM_FIELD_TYPES, FIELD_CHANGE_KINDS } from "../../application/fields/manage-fields.js";
+import { CUSTOM_FIELD_TYPES } from "../../application/fields/field-configuration.js";
+import { FIELD_CHANGE_KINDS } from "../../application/fields/manage-fields.js";
 import { createElement } from "../../shared/dom.js";
 import { createSchemaTable } from "../../shared/ui-components.js";
 

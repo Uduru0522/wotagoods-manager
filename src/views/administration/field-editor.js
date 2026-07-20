@@ -1,4 +1,4 @@
-import { CUSTOM_FIELD_TYPES } from "../../application/fields/manage-fields.js";
+import { CUSTOM_FIELD_TYPES } from "../../application/fields/field-configuration.js";
 import { createElement } from "../../shared/dom.js";
 
 function createLabel(text, input, description) {
