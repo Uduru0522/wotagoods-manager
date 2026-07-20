@@ -17,16 +17,16 @@ order. It describes direction, not a release-date commitment.
 - asynchronous storage initialization and retryable failures
 - static checks and dependency-free unit tests
 
-## Current Stabilization Milestone
+## Completed Stabilization Milestone
 
-- restructure contributor documentation
-- separate IndexedDB connection, request, and repository responsibilities
-- separate startup coordination from runtime view assembly
-- validate persisted records before they reach views
-- validate the browser module graph during repository checks
-- broaden lifecycle and failure-path tests
+- restructured contributor documentation by ownership
+- separated IndexedDB connection, request, repository, and adapter responsibilities
+- separated startup coordination from runtime view assembly
+- added strict validation before persisted records reach views
+- added browser import-graph and offline-cache verification
+- broadened startup, lifecycle, corruption, and transaction-failure tests
 
-## Next Product Milestone: Goods-Type Creation
+## Current Product Milestone: Goods-Type Creation
 
 - create goods types from Administration
 - create protected built-in field definitions atomically
