@@ -1,4 +1,5 @@
 import { CUSTOM_FIELD_TYPES } from "../../application/fields/field-configuration.js";
+import { createActionButton } from "../../shared/action-button.js";
 import { createElement } from "../../shared/dom.js";
 
 function createLabel(text, input, description) {
@@ -13,14 +14,6 @@ function createLabel(text, input, description) {
   }
 
   return label;
-}
-
-function createButton(label, className = "secondary-action") {
-  return createElement("button", {
-    attributes: { type: "button" },
-    className,
-    textContent: label
-  });
 }
 
 function parseOptionLabels(value) {
@@ -52,11 +45,10 @@ export function createFieldEditor({ field, onCancel, onSave }) {
     attributes: { "aria-live": "polite" },
     className: "form-feedback"
   });
-  const cancelButton = createButton("Cancel");
-  const stageButton = createElement("button", {
-    attributes: { type: "submit" },
+  const cancelButton = createActionButton("Cancel");
+  const stageButton = createActionButton(isDraft ? "Stage field" : "Stage changes", {
     className: "primary-action",
-    textContent: isDraft ? "Stage field" : "Stage changes"
+    type: "submit"
   });
 
   CUSTOM_FIELD_TYPES.forEach(({ label, value }) => {

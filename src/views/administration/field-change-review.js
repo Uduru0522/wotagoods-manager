@@ -1,5 +1,6 @@
 import { CUSTOM_FIELD_TYPES } from "../../application/fields/field-configuration.js";
 import { FIELD_CHANGE_KINDS } from "../../application/fields/manage-fields.js";
+import { createActionButton } from "../../shared/action-button.js";
 import { createElement } from "../../shared/dom.js";
 import { createSchemaTable } from "../../shared/ui-components.js";
 
@@ -10,14 +11,6 @@ const REVIEW_COLUMNS = Object.freeze([
 ]);
 
 const TYPE_LABELS = new Map(CUSTOM_FIELD_TYPES.map(({ label, value }) => [value, label]));
-
-function createButton(label, className = "secondary-action") {
-  return createElement("button", {
-    attributes: { type: "button" },
-    className,
-    textContent: label
-  });
-}
 
 function describeChange(change, fieldsById) {
   const field = fieldsById.get(change.fieldId);
@@ -76,8 +69,10 @@ export function createFieldChangeReview({
     className: "creation-status"
   });
   const actions = createElement("div", { className: "form-actions" });
-  const backButton = createButton("Back");
-  const applyButton = createButton("Apply staged changes", "primary-action");
+  const backButton = createActionButton("Back");
+  const applyButton = createActionButton("Apply staged changes", {
+    className: "primary-action"
+  });
   const heading = createElement("div", { className: "form-heading" });
 
   heading.append(
@@ -117,7 +112,9 @@ export function createFieldChangeReview({
       review.removeAttribute("aria-busy");
 
       if (wasSaved) {
-        const reloadButton = createButton("Reload application", "primary-action");
+        const reloadButton = createActionButton("Reload application", {
+          className: "primary-action"
+        });
         reloadButton.addEventListener("click", () => window.location.reload());
         applyButton.replaceWith(reloadButton);
       } else {

@@ -1,22 +1,10 @@
 import { APP_CONFIG } from "./config.js";
 import { clearElement } from "../shared/dom.js";
+import {
+  getCustomPropertyDurationMs,
+  prefersReducedMotion
+} from "../shared/motion.js";
 import { getViewById } from "../views/view-definitions.js";
-
-function getMotionDurationMs() {
-  const rawValue = getComputedStyle(document.documentElement)
-    .getPropertyValue("--motion-fast")
-    .trim();
-
-  if (rawValue.endsWith("ms")) {
-    return Number.parseFloat(rawValue);
-  }
-
-  if (rawValue.endsWith("s")) {
-    return Number.parseFloat(rawValue) * 1000;
-  }
-
-  return APP_CONFIG.motion.fastFallbackMs;
-}
 
 export function createViewRouter({ navigation, renderer, views, viewPanel, viewSection, viewTitle }) {
   let activeViewId = null;
@@ -42,16 +30,23 @@ export function createViewRouter({ navigation, renderer, views, viewPanel, viewS
     clearTimeout(viewSwitchTimer);
     navigation.setActiveView(view.id);
 
-    if (!viewPanel.hasChildNodes()) {
+    if (!viewPanel.hasChildNodes() || prefersReducedMotion()) {
+      viewPanel.classList.remove("is-switching");
       commitView(view);
       return;
     }
 
     viewPanel.classList.add("is-switching");
+    const motionDurationMs = getCustomPropertyDurationMs(
+      document.documentElement,
+      "--motion-fast",
+      APP_CONFIG.motion.fastFallbackMs
+    );
+
     viewSwitchTimer = window.setTimeout(() => {
       commitView(view);
       requestAnimationFrame(() => viewPanel.classList.remove("is-switching"));
-    }, Math.round(getMotionDurationMs() / 2));
+    }, Math.round(motionDurationMs / 2));
   }
 
   return {

@@ -1081,10 +1081,6 @@ textarea {
   max-width: 1024px;
 }
 
-.administration-view .placeholder {
-  min-height: 0;
-}
-
 .goods-type-creator {
   width: 100%;
   min-width: 0;
@@ -1244,10 +1240,6 @@ textarea {
 
 .goods-type-review .meta-list {
   margin-top: 0;
-}
-
-.goods-type-review .schema-table {
-  min-width: max(480px, 100%);
 }
 
 .creation-status {
@@ -1796,12 +1788,6 @@ textarea {
   font-size: 15px;
   line-height: 1.6;
   overflow-wrap: anywhere;
-}
-
-.action-hint {
-  padding-top: 12px;
-  color: var(--text);
-  font-weight: 650;
 }
 
 @media (max-width: 760px) {

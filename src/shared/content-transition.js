@@ -1,31 +1,9 @@
+import {
+  getTransitionDurationMs,
+  prefersReducedMotion
+} from "./motion.js";
+
 const FALLBACK_PHASE_DURATION_MS = 80;
-
-function parseTimeValue(value) {
-  const normalizedValue = value.trim();
-
-  if (normalizedValue.endsWith("ms")) {
-    return Number.parseFloat(normalizedValue);
-  }
-
-  if (normalizedValue.endsWith("s")) {
-    return Number.parseFloat(normalizedValue) * 1000;
-  }
-
-  return 0;
-}
-
-function getPhaseDurationMs(element) {
-  const durations = getComputedStyle(element).transitionDuration
-    .split(",")
-    .map(parseTimeValue);
-  const longestDuration = Math.max(...durations);
-
-  return longestDuration > 0 ? longestDuration : FALLBACK_PHASE_DURATION_MS;
-}
-
-function prefersReducedMotion() {
-  return globalThis.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
-}
 
 export function createContentTransition(element, { animateInitial = false } = {}) {
   let operationId = 0;
@@ -94,7 +72,7 @@ export function createContentTransition(element, { animateInitial = false } = {}
     element.dataset.contentTransition = "exit";
     exitTimer = globalThis.setTimeout(
       () => commit(currentOperationId, update, afterUpdate),
-      getPhaseDurationMs(element)
+      getTransitionDurationMs(element, FALLBACK_PHASE_DURATION_MS)
     );
   }
 

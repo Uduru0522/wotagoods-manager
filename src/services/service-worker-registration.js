@@ -5,9 +5,16 @@ export function registerServiceWorker() {
     return;
   }
 
-  window.addEventListener("load", () => {
-    navigator.serviceWorker.register(APP_CONFIG.serviceWorkerPath).catch((error) => {
-      console.warn("Service worker registration failed:", error);
-    });
+  window.addEventListener("load", async () => {
+    try {
+      const registration = await navigator.serviceWorker.register(
+        APP_CONFIG.serviceWorkerPath,
+        { updateViaCache: "none" }
+      );
+
+      await registration.update();
+    } catch (error) {
+      console.warn("Service worker registration or update check failed:", error);
+    }
   });
 }

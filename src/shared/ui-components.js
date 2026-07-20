@@ -1,13 +1,6 @@
 import { createElement } from "./dom.js";
 import { bindDragScroll } from "./drag-scroll.js";
 
-export function createActionHint(text) {
-  return createElement("p", {
-    className: "action-hint",
-    textContent: text
-  });
-}
-
 export function createMetaList(items) {
   const list = createElement("dl", { className: "meta-list" });
 

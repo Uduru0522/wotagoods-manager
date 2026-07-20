@@ -1,15 +1,8 @@
+import { createActionButton } from "../../shared/action-button.js";
 import { createContentTransition } from "../../shared/content-transition.js";
 import { createElement } from "../../shared/dom.js";
 
 const CONFIRMATION_TEXT = "RESET";
-
-function createButton(label, className = "secondary-action") {
-  return createElement("button", {
-    attributes: { type: "button" },
-    className,
-    textContent: label
-  });
-}
 
 export function createLocalDataReset({ mutationController, onReset, resetLocalData }) {
   const container = createElement("section", {
@@ -20,7 +13,9 @@ export function createLocalDataReset({ mutationController, onReset, resetLocalDa
 
   function renderLanding() {
     const copy = createElement("div", { className: "local-reset-copy" });
-    const resetButton = createButton("Reset local data", "danger-action");
+    const resetButton = createActionButton("Reset local data", {
+      className: "danger-action"
+    });
 
     copy.append(
       createElement("h3", { textContent: "Reset local data" }),
@@ -59,10 +54,12 @@ export function createLocalDataReset({ mutationController, onReset, resetLocalDa
       className: "creation-status"
     });
     const actions = createElement("div", { className: "form-actions" });
-    const cancelButton = createButton("Cancel");
-    const confirmButton = createButton("Reset everything", "danger-action");
+    const cancelButton = createActionButton("Cancel");
+    const confirmButton = createActionButton("Reset everything", {
+      className: "danger-action",
+      type: "submit"
+    });
 
-    confirmButton.type = "submit";
     confirmButton.disabled = true;
     heading.append(
       createElement("h3", { textContent: "Reset everything?" }),

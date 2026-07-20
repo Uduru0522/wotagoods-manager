@@ -1,3 +1,4 @@
+import { createActionButton } from "../../shared/action-button.js";
 import { createContentTransition } from "../../shared/content-transition.js";
 import { createElement } from "../../shared/dom.js";
 import { createMetaList } from "../../shared/ui-components.js";
@@ -12,14 +13,6 @@ function findSimilarGoodsType(goodsTypes, displayName) {
   return goodsTypes.find(
     (goodsType) => normalizeDisplayName(goodsType.displayName) === normalizedName
   );
-}
-
-function createButton(label, { className = "secondary-action", type = "button" } = {}) {
-  return createElement("button", {
-    attributes: { type },
-    className,
-    textContent: label
-  });
 }
 
 function createActions(...buttons) {
@@ -78,7 +71,9 @@ export function createGoodsTypeCreator({
 
   function renderLanding() {
     const copy = createElement("div");
-    const addButton = createButton("Add goods type", { className: "primary-action" });
+    const addButton = createActionButton("Add goods type", {
+      className: "primary-action"
+    });
 
     copy.append(
       createElement("h3", { textContent: "Create a collection" }),
@@ -114,8 +109,8 @@ export function createGoodsTypeCreator({
       attributes: { "aria-live": "polite" },
       className: "form-feedback"
     });
-    const cancelButton = createButton("Cancel");
-    const continueButton = createButton("Review", {
+    const cancelButton = createActionButton("Cancel");
+    const continueButton = createActionButton("Review", {
       className: "primary-action",
       type: "submit"
     });
@@ -186,8 +181,8 @@ export function createGoodsTypeCreator({
       attributes: { "aria-live": "polite" },
       className: "creation-status"
     });
-    const backButton = createButton("Back");
-    const confirmButton = createButton("Create goods type", {
+    const backButton = createActionButton("Back");
+    const confirmButton = createActionButton("Create goods type", {
       className: "primary-action"
     });
 
@@ -239,7 +234,7 @@ export function createGoodsTypeCreator({
         review.removeAttribute("aria-busy");
 
         if (wasSaved) {
-          const reloadButton = createButton("Reload application", {
+          const reloadButton = createActionButton("Reload application", {
             className: "primary-action"
           });
 

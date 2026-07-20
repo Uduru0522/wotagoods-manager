@@ -1,7 +1,10 @@
 import { createElement } from "../../shared/dom.js";
 import { createIcon } from "../../shared/icons.js";
-
-const CLOSE_FALLBACK_MS = 200;
+import {
+  MAX_UI_MOTION_MS,
+  getAnimationDurationMs,
+  prefersReducedMotion
+} from "../../shared/motion.js";
 
 export function createItemEntryDialog(goodsType) {
   const dialog = createElement("dialog", {
@@ -50,10 +53,16 @@ export function createItemEntryDialog(goodsType) {
     }
 
     globalThis.clearTimeout(closeTimer);
-    dialog.removeEventListener("animationend", finishClose);
+    dialog.removeEventListener("animationend", handleCloseAnimationEnd);
     isClosing = false;
     delete dialog.dataset.closing;
     dialog.close();
+  }
+
+  function handleCloseAnimationEnd(event) {
+    if (event.target === dialog) {
+      finishClose();
+    }
   }
 
   function requestClose() {
@@ -61,10 +70,18 @@ export function createItemEntryDialog(goodsType) {
       return;
     }
 
+    if (prefersReducedMotion()) {
+      dialog.close();
+      return;
+    }
+
     isClosing = true;
     dialog.dataset.closing = "true";
-    dialog.addEventListener("animationend", finishClose);
-    closeTimer = globalThis.setTimeout(finishClose, CLOSE_FALLBACK_MS);
+    dialog.addEventListener("animationend", handleCloseAnimationEnd);
+    closeTimer = globalThis.setTimeout(
+      finishClose,
+      getAnimationDurationMs(dialog, MAX_UI_MOTION_MS)
+    );
   }
 
   closeButton.addEventListener("click", requestClose);

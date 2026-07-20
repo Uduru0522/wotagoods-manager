@@ -1,4 +1,4 @@
-const CACHE_NAME = "wotagoods-manager-v62";
+const CACHE_NAME = "wotagoods-manager-v63";
 
 const ASSET_GROUPS = {
   app: [
@@ -59,10 +59,12 @@ const ASSET_GROUPS = {
     "./src/services/theme.js"
   ],
   shared: [
+    "./src/shared/action-button.js",
     "./src/shared/content-transition.js",
     "./src/shared/drag-scroll.js",
     "./src/shared/dom.js",
     "./src/shared/icons.js",
+    "./src/shared/motion.js",
     "./src/shared/ui-components.js"
   ],
   views: [
@@ -98,7 +100,10 @@ function getNormalizedRequestUrl(requestUrl) {
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_ASSETS))
+    caches
+      .open(CACHE_NAME)
+      .then((cache) => cache.addAll(APP_ASSETS))
+      .then(() => self.skipWaiting())
   );
 });
 
@@ -113,6 +118,7 @@ self.addEventListener("activate", (event) => {
             .map((cacheName) => caches.delete(cacheName))
         )
       )
+      .then(() => self.clients.claim())
   );
 });
 

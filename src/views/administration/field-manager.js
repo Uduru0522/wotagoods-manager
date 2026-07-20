@@ -1,18 +1,11 @@
 import { FIELD_CHANGE_KINDS } from "../../application/fields/manage-fields.js";
+import { createActionButton } from "../../shared/action-button.js";
 import { createContentTransition } from "../../shared/content-transition.js";
 import { createElement } from "../../shared/dom.js";
 import { createFieldChangeReview } from "./field-change-review.js";
 import { createFieldChangeSet } from "./field-change-set.js";
 import { createFieldEditor } from "./field-editor.js";
 import { createFieldList } from "./field-list.js";
-
-function createButton(label, className = "secondary-action") {
-  return createElement("button", {
-    attributes: { type: "button" },
-    className,
-    textContent: label
-  });
-}
 
 export function createFieldManager({ fieldManagement, goodsTypes, mutationController }) {
   const container = createElement("section", { className: "field-manager" });
@@ -42,7 +35,9 @@ export function createFieldManager({ fieldManagement, goodsTypes, mutationContro
     const select = createElement("select", {
       attributes: { "aria-label": "Goods type" }
     });
-    const openButton = createButton("Manage fields", "primary-action");
+    const openButton = createActionButton("Manage fields", {
+      className: "primary-action"
+    });
 
     goodsTypes.forEach((goodsType) => {
       select.append(
@@ -108,16 +103,20 @@ export function createFieldManager({ fieldManagement, goodsTypes, mutationContro
     const workspace = createElement("div", { className: "field-manager-workspace" });
     const header = createElement("div", { className: "field-workspace-header" });
     const headerCopy = createElement("div");
-    const chooseButton = createButton("Change collection");
-    const addButton = createButton("Add field", "primary-action");
+    const chooseButton = createActionButton("Change collection");
+    const addButton = createActionButton("Add field", {
+      className: "primary-action"
+    });
     const editorSlot = createElement("div", { className: "field-editor-slot" });
     const editorTransition = createContentTransition(editorSlot, { animateInitial: true });
     const footer = createElement("div", { className: "field-stage-footer" });
     const stageStatus = createElement("span", {
       textContent: `${changeSet.changeCount} staged change${changeSet.changeCount === 1 ? "" : "s"}`
     });
-    const discardButton = createButton("Discard staged");
-    const reviewButton = createButton("Review and apply", "primary-action");
+    const discardButton = createActionButton("Discard staged");
+    const reviewButton = createActionButton("Review and apply", {
+      className: "primary-action"
+    });
     const previewFields = changeSet.getPreviewFields();
 
     headerCopy.append(
@@ -228,8 +227,10 @@ export function createFieldManager({ fieldManagement, goodsTypes, mutationContro
   function openDeleteConfirmation(editorSlot, editorTransition, field) {
     const confirmation = createElement("div", { className: "field-delete-confirmation" });
     const actions = createElement("div", { className: "form-actions" });
-    const cancelButton = createButton("Cancel");
-    const deleteButton = createButton("Stage removal", "danger-action");
+    const cancelButton = createActionButton("Cancel");
+    const deleteButton = createActionButton("Stage removal", {
+      className: "danger-action"
+    });
 
     confirmation.append(
       createElement("h4", { textContent: `Remove ${field.displayName}?` }),
