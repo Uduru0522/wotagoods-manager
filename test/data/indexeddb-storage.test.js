@@ -8,10 +8,10 @@ import {
   upgradeDatabase
 } from "../../src/data/indexeddb/database-schema.js";
 import {
-  createIndexedDbStorage,
-  openDatabase,
-  requestToPromise
+  createIndexedDbStorage
 } from "../../src/data/indexeddb/indexeddb-storage.js";
+import { openDatabase } from "../../src/data/indexeddb/connection.js";
+import { requestToPromise } from "../../src/data/indexeddb/requests.js";
 import {
   STORAGE_ERROR_CODES,
   StorageError
