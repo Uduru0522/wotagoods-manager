@@ -55,6 +55,9 @@ For field-management changes:
 For item-registration changes:
 
 - add values for every supported custom field type and review them before saving
+- confirm scheme-less web addresses normalize to HTTPS and HTTP is rejected
+- crop portrait and landscape images and confirm thumbnails survive reload
+- confirm yes/no fields always produce one boolean value through a toggle
 - confirm required values are enforced after whitespace normalization
 - reload user mode and confirm saved items remain
 - reload debug mode and confirm created items disappear

@@ -200,9 +200,10 @@ Required asset metadata:
 - byte size
 - creation and update timestamps
 
-The current text-first item-entry increment stores `imageAssetId: null`. The image
-increment will store one processed low-resolution image. Image dimensions, output
-format, and compression quality remain decisions for that work.
+Item entry stores an optional processed low-resolution JPEG. Portrait output is
+`560 x 792`; landscape output is `792 x 560`. Source files remain only in the
+in-memory draft and are not written to IndexedDB. Items without an image store
+`imageAssetId: null`.
 
 ## Soft Deletion
 

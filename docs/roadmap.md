@@ -51,7 +51,7 @@ order. It describes direction, not a release-date commitment.
 - reserve Overview for future per-collection summaries
 - reset all loaded collection data through typed confirmation
 
-## Completed Item Registration Core
+## Completed Item Registration
 
 - generate forms from active field definitions
 - validate built-in and custom values
@@ -59,18 +59,23 @@ order. It describes direction, not a release-date commitment.
 - review the complete item before saving
 - write validated item records to user or debug storage
 - retain input after recoverable failures
-- list newly registered items in their collection
-
-## Current Product Milestone: Item Images
-
 - choose and crop one image to a supported paper ratio
 - process a low-resolution browser-local image
 - write the item and optional image asset atomically
-- render item thumbnails without loading full-size source files
+- list newly registered items with thumbnails and custom values
+
+## Current Product Milestone: Item List Management
+
+- keep the current compact list as the primary item view
+- filter items by built-in and custom field values
+- sort items by name, creation time, update time, and supported custom values
+- edit items through the existing modal workflow
+- soft-delete items with explicit confirmation
+- add a cards view only after list management is complete
 
 ## Later Milestones
 
-1. Browse, filter, and edit items.
+1. Cards view for visual browsing.
 2. Restore and purge soft-deleted records.
 3. Export and validated import.
 4. Optional Google Drive snapshots.

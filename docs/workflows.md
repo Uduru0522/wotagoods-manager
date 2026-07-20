@@ -24,8 +24,8 @@ to temporary in-memory data that disappears when the page reloads.
 
 ## Add Item
 
-Status: generated fields, review, item persistence, and listing are implemented.
-Image selection, cropping, and asset persistence are planned.
+Status: generated fields, image cropping, review, atomic persistence, and listing
+are implemented.
 
 ```mermaid
 graph TD
@@ -54,9 +54,9 @@ graph TD
 The draft and cropped image stay in UI memory until confirmation. Allowed crop
 ratios are portrait `1:sqrt(2)` and horizontal `sqrt(2):1`.
 
-The current implementation follows the non-image path through validation and item
-persistence. Until image processing is implemented, new items store
-`imageAssetId: null`.
+Scheme-less web addresses are normalized to HTTPS and explicit HTTP addresses are
+rejected. Yes/no fields always store `true` or `false`; they do not have an unset
+state.
 
 ## Manage Fields
 

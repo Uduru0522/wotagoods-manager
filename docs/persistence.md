@@ -49,6 +49,7 @@ initialize
 listGoodsTypes
 createGoodsType
 createItem
+getAsset
 listFieldDefinitions
 listItems
 saveFieldDefinitions
@@ -58,10 +59,10 @@ close
 
 `createGoodsType` accepts a validated goods-type record and its field definitions.
 Field management reads definitions by goods type and saves a validated record set
-atomically. Item management lists items by goods type and writes validated item
-records. The contract grows only when an application operation needs it. Planned
-capabilities include atomic item-plus-asset writes and versioned transfer
-operations. Do not add speculative adapter methods.
+atomically. Item management lists items by goods type, retrieves image assets,
+and writes validated item-plus-asset bundles atomically. The contract grows only
+when an application operation needs it. Planned capabilities include versioned
+transfer operations. Do not add speculative adapter methods.
 
 ## Transactions
 

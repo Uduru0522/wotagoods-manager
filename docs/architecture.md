@@ -138,8 +138,9 @@ Owns view definitions and view rendering.
   orchestration into focused modules. Destructive local-data reset is isolated in
   its own typed-confirmation component.
 - `items/`: collection item-list views and the modal item-entry workflow.
-  Form generation, dialog orchestration, and list rendering remain separate so
-  image processing can extend the draft without changing persistence UI.
+  Form generation, image processing, dialog orchestration, value formatting, and
+  list rendering remain separate. `items-view.js` owns collection loading and can
+  add a cards renderer later without changing the list renderer.
 
 ## View Model
 
