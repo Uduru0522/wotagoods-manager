@@ -43,7 +43,7 @@ export function renderStartupError(elements, error, { onRetry }) {
     textContent: "Retry"
   });
 
-  retryButton.addEventListener("click", onRetry);
+  retryButton.addEventListener("click", () => void onRetry());
   actions.append(retryButton);
   article.append(
     createElement("h3", { textContent: "Your collection could not be opened" }),

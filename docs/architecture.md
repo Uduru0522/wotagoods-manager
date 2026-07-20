@@ -22,12 +22,14 @@ real forms, and item views are added.
 
 Owns application assembly and app-level behavior.
 
-- `app-shell.js`: composition root. Wires data, services, navigation, router, and startup behavior.
+- `app-shell.js`: composition root and browser lifecycle owner.
+- `app-runtime.js`: builds data-dependent views, navigation, renderer, and router.
 - `app-elements.js`: required DOM lookup for shell elements.
 - `app-mode.js`: user/debug mode detection.
 - `config.js`: shared constants for selectors, theme, layout, and defaults.
 - `layout-transition.js`: wide/narrow breakpoint transition state.
 - `startup-state.js`: storage loading and recoverable startup-error rendering.
+- `startup-coordinator.js`: storage lifecycle, retries, and race-safe mounting.
 - `view-router.js`: active view switching, title updates, and view transition timing.
 - `view-scroll-state.js`: compact title-bar state based on view scroll position.
 
