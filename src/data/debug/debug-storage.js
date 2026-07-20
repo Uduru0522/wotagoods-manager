@@ -8,13 +8,16 @@ import {
 } from "./debug-fixtures.js";
 import { parseFieldDefinitionRecord } from "../models/field-definition.js";
 import { parseGoodsTypeRecord } from "../models/goods-type.js";
+import { parseItemRecord } from "../models/item.js";
 
 export function createDebugStorage({
   goodsTypes = createDebugGoodsTypes(),
-  fieldDefinitions = createDebugFieldDefinitions(goodsTypes)
+  fieldDefinitions = createDebugFieldDefinitions(goodsTypes),
+  items = []
 } = {}) {
   const records = goodsTypes.map(parseGoodsTypeRecord);
   const fieldRecords = fieldDefinitions.map(parseFieldDefinitionRecord);
+  const itemRecords = items.map(parseItemRecord);
   let isInitialized = false;
 
   function assertInitialized() {
@@ -138,10 +141,49 @@ export function createDebugStorage({
     return structuredClone(parsedFields);
   }
 
+  async function createItem(item) {
+    assertInitialized();
+
+    let parsedItem;
+
+    try {
+      parsedItem = parseItemRecord(item);
+    } catch (error) {
+      throw new StorageError("The item write contains invalid data.", {
+        cause: error,
+        code: STORAGE_ERROR_CODES.invalidData
+      });
+    }
+
+    if (
+      itemRecords.some(({ id }) => id === parsedItem.id) ||
+      !records.some(({ id, isDeleted }) => id === parsedItem.goodsTypeId && !isDeleted)
+    ) {
+      throw new StorageError("The item has invalid or duplicate identity.", {
+        code: STORAGE_ERROR_CODES.operationFailed
+      });
+    }
+
+    itemRecords.push(parsedItem);
+    return structuredClone(parsedItem);
+  }
+
+  async function listItems(goodsTypeId, { includeDeleted = false } = {}) {
+    assertInitialized();
+
+    const matchingItems = itemRecords
+      .filter((item) => item.goodsTypeId === goodsTypeId)
+      .filter((item) => includeDeleted || !item.isDeleted)
+      .sort((left, right) => right.updatedAt.localeCompare(left.updatedAt));
+
+    return structuredClone(matchingItems);
+  }
+
   async function resetData() {
     assertInitialized();
     records.splice(0, records.length);
     fieldRecords.splice(0, fieldRecords.length);
+    itemRecords.splice(0, itemRecords.length);
   }
 
   function close() {
@@ -151,9 +193,11 @@ export function createDebugStorage({
   return {
     close,
     createGoodsType,
+    createItem,
     initialize,
     listFieldDefinitions,
     listGoodsTypes,
+    listItems,
     resetData,
     saveFieldDefinitions
   };

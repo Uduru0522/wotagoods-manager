@@ -12,6 +12,7 @@ import {
   parseGoodsTypeRecord
 } from "../../src/data/models/goods-type.js";
 import { createFieldDefinitionRecord } from "../../src/data/models/field-definition.js";
+import { createItemRecord } from "../../src/data/models/item.js";
 
 const FIXED_TIME = "2026-07-20T00:00:00.000Z";
 
@@ -223,6 +224,31 @@ test("DebugStorage lists fixture fields and applies isolated field changes", asy
   assert.equal((await storage.listFieldDefinitions("figures")).length, 4);
 });
 
+test("DebugStorage creates and lists isolated item records", async () => {
+  const item = createItemRecord(
+    {
+      id: "figure-1",
+      goodsTypeId: "figures",
+      name: "Example figure",
+      customValues: {}
+    },
+    { now: () => FIXED_TIME }
+  );
+  const storage = createDebugStorage();
+
+  await storage.initialize();
+  await storage.createItem(item);
+
+  const firstRead = await storage.listItems("figures");
+  firstRead[0].name = "External change";
+  assert.equal((await storage.listItems("figures"))[0].name, "Example figure");
+  await assert.rejects(storage.createItem(item), /duplicate identity/);
+  await assert.rejects(
+    storage.createItem({ ...item, id: "wrong-type", goodsTypeId: "missing" }),
+    /invalid or duplicate identity/
+  );
+});
+
 test("DebugStorage reset clears all temporary domain records", async () => {
   const storage = createDebugStorage();
 
@@ -230,8 +256,13 @@ test("DebugStorage reset clears all temporary domain records", async () => {
   assert.equal((await storage.listGoodsTypes()).length, 3);
   assert.equal((await storage.listFieldDefinitions("figures")).length, 3);
 
+  await storage.createItem(
+    createItemRecord({ id: "figure-1", goodsTypeId: "figures", name: "Figure" })
+  );
+
   await storage.resetData();
 
   assert.deepEqual(await storage.listGoodsTypes(), []);
   assert.deepEqual(await storage.listFieldDefinitions("figures"), []);
+  assert.deepEqual(await storage.listItems("figures"), []);
 });

@@ -1,8 +1,10 @@
+import { createContentTransition } from "../../shared/content-transition.js";
 import { createElement } from "../../shared/dom.js";
 import { createIcon } from "../../shared/icons.js";
 import { createItemEntryDialog } from "./item-entry-dialog.js";
+import { createItemList } from "./item-list.js";
 
-export function renderItemsView({ goodsType }) {
+export function renderItemsView({ goodsType }, { itemManagement, mutationController }) {
   const article = createElement("article", { className: "items-view" });
   const toolbar = createElement("div", { className: "items-toolbar" });
   const copy = createElement("div");
@@ -10,13 +12,19 @@ export function renderItemsView({ goodsType }) {
     attributes: { type: "button" },
     className: "primary-action items-add-action"
   });
-  const emptyState = createElement("section", { className: "items-empty-state" });
-  const itemEntry = createItemEntryDialog(goodsType);
+  const listSlot = createElement("div", { className: "items-list-slot" });
+  const listTransition = createContentTransition(listSlot, { animateInitial: true });
+  const itemEntry = createItemEntryDialog({
+    goodsType,
+    itemManagement,
+    mutationController,
+    onCreated: refreshItems
+  });
 
   copy.append(
     createElement("h3", { textContent: `${goodsType.displayName} items` }),
     createElement("p", {
-      textContent: "Items registered in this collection will be managed here."
+      textContent: "Browse and register items stored in this collection."
     })
   );
   addButton.append(
@@ -25,13 +33,31 @@ export function renderItemsView({ goodsType }) {
   );
   addButton.addEventListener("click", itemEntry.open);
   toolbar.append(copy, addButton);
-  emptyState.append(
-    createElement("h4", { textContent: "No items to display" }),
-    createElement("p", {
-      textContent: "Items saved to this collection will appear here."
-    })
-  );
-  article.append(toolbar, emptyState, itemEntry.dialog);
+  article.append(toolbar, listSlot, itemEntry.dialog);
 
+  async function refreshItems() {
+    listTransition.replace(() => {
+      listSlot.replaceChildren(
+        createElement("p", { className: "items-loading", textContent: "Loading items..." })
+      );
+    });
+
+    try {
+      const items = await itemManagement.listItems(goodsType.id);
+      listTransition.replace(() => listSlot.replaceChildren(createItemList(items)));
+    } catch (error) {
+      console.error("Items could not be loaded:", error);
+      listTransition.replace(() => {
+        listSlot.replaceChildren(
+          createElement("div", {
+            className: "items-load-error",
+            textContent: "Items could not be loaded. Check browser storage access and reopen this view."
+          })
+        );
+      });
+    }
+  }
+
+  refreshItems();
   return article;
 }

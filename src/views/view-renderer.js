@@ -58,6 +58,7 @@ export function createViewRenderer({
   createGoodsType,
   fieldManagement,
   goodsTypes,
+  itemManagement,
   mutationController,
   onGoodsTypeCreated,
   onLocalDataReset,
@@ -75,7 +76,10 @@ export function createViewRenderer({
       resetLocalData
     }),
     [RENDERERS.goodsType]: (view) => renderGoodsTypeView(view),
-    [RENDERERS.goodsTypeItems]: (view) => renderItemsView(view),
+    [RENDERERS.goodsTypeItems]: (view) => renderItemsView(view, {
+      itemManagement,
+      mutationController
+    }),
     [RENDERERS.options]: () => renderOptionsView({ themeController }),
     [RENDERERS.placeholder]: (view) => renderPlaceholderView(view)
   };

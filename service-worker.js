@@ -1,4 +1,4 @@
-const CACHE_NAME = "wotagoods-manager-v63";
+const CACHE_NAME = "wotagoods-manager-v64";
 
 const ASSET_GROUPS = {
   app: [
@@ -6,6 +6,7 @@ const ASSET_GROUPS = {
     "./src/application/fields/field-configuration.js",
     "./src/application/fields/manage-fields.js",
     "./src/application/goods-types/create-goods-type.js",
+    "./src/application/items/manage-items.js",
     "./src/app/app-elements.js",
     "./src/app/app-mode.js",
     "./src/app/app-runtime.js",
@@ -35,11 +36,13 @@ const ASSET_GROUPS = {
     "./src/data/indexeddb/field-definition-repository.js",
     "./src/data/indexeddb/goods-type-repository.js",
     "./src/data/indexeddb/indexeddb-storage.js",
+    "./src/data/indexeddb/item-repository.js",
     "./src/data/indexeddb/local-data-repository.js",
     "./src/data/indexeddb/requests.js",
     "./src/data/models/built-in-fields.js",
     "./src/data/models/field-definition.js",
-    "./src/data/models/goods-type.js"
+    "./src/data/models/goods-type.js",
+    "./src/data/models/item.js"
   ],
   install: [
     "./manifest.webmanifest",
@@ -77,6 +80,8 @@ const ASSET_GROUPS = {
     "./src/views/administration/goods-type-creator.js",
     "./src/views/administration/local-data-reset.js",
     "./src/views/items/item-entry-dialog.js",
+    "./src/views/items/item-entry-form.js",
+    "./src/views/items/item-list.js",
     "./src/views/items/items-view.js",
     "./src/views/view-definitions.js",
     "./src/views/view-metadata.js",

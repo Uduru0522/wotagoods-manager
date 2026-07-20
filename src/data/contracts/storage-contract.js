@@ -12,8 +12,10 @@ const REQUIRED_STORAGE_METHODS = Object.freeze([
   "initialize",
   "listGoodsTypes",
   "createGoodsType",
+  "createItem",
   "listFieldDefinitions",
   "saveFieldDefinitions",
+  "listItems",
   "resetData",
   "close"
 ]);

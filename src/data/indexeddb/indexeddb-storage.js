@@ -7,6 +7,7 @@ import { openDatabase } from "./connection.js";
 import { createGoodsTypeRepository } from "./goods-type-repository.js";
 import { createFieldDefinitionRepository } from "./field-definition-repository.js";
 import { createLocalDataRepository } from "./local-data-repository.js";
+import { createItemRepository } from "./item-repository.js";
 
 export function createIndexedDbStorage({
   databaseName = DATABASE_NAME,
@@ -16,6 +17,7 @@ export function createIndexedDbStorage({
   let goodsTypeRepository = null;
   let fieldDefinitionRepository = null;
   let localDataRepository = null;
+  let itemRepository = null;
   let initializationPromise = null;
 
   function assertInitialized() {
@@ -23,7 +25,8 @@ export function createIndexedDbStorage({
       !database ||
       !goodsTypeRepository ||
       !fieldDefinitionRepository ||
-      !localDataRepository
+      !localDataRepository ||
+      !itemRepository
     ) {
       throw new StorageError("IndexedDB storage has not been initialized.", {
         code: STORAGE_ERROR_CODES.notInitialized
@@ -43,6 +46,7 @@ export function createIndexedDbStorage({
       goodsTypeRepository = createGoodsTypeRepository(database);
       fieldDefinitionRepository = createFieldDefinitionRepository(database);
       localDataRepository = createLocalDataRepository(database);
+      itemRepository = createItemRepository(database);
       database.onversionchange = () => close();
     } finally {
       initializationPromise = null;
@@ -74,20 +78,33 @@ export function createIndexedDbStorage({
     return localDataRepository.reset();
   }
 
+  async function createItem(item) {
+    assertInitialized();
+    return itemRepository.create(item);
+  }
+
+  async function listItems(goodsTypeId, options) {
+    assertInitialized();
+    return itemRepository.list(goodsTypeId, options);
+  }
+
   function close() {
     database?.close();
     database = null;
     goodsTypeRepository = null;
     fieldDefinitionRepository = null;
     localDataRepository = null;
+    itemRepository = null;
   }
 
   return {
     close,
     createGoodsType,
+    createItem,
     initialize,
     listFieldDefinitions,
     listGoodsTypes,
+    listItems,
     resetData,
     saveFieldDefinitions
   };

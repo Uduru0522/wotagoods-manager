@@ -18,6 +18,7 @@ import {
 } from "../../src/data/contracts/storage-contract.js";
 import { createGoodsTypeRepository } from "../../src/data/indexeddb/goods-type-repository.js";
 import { createFieldDefinitionRepository } from "../../src/data/indexeddb/field-definition-repository.js";
+import { createItemRepository } from "../../src/data/indexeddb/item-repository.js";
 import {
   USER_DATA_STORES,
   createLocalDataRepository
@@ -253,6 +254,22 @@ function createGoodsTypeBundle() {
         updatedAt: timestamp
       }
     ]
+  };
+}
+
+function createItemRecord() {
+  const timestamp = "2026-07-20T00:00:00.000Z";
+
+  return {
+    id: "figure-1",
+    goodsTypeId: "figures",
+    name: "Example figure",
+    imageAssetId: null,
+    customValues: {},
+    isDeleted: false,
+    deletedAt: null,
+    createdAt: timestamp,
+    updatedAt: timestamp
   };
 }
 
@@ -587,6 +604,51 @@ test("field definition repository rejects mismatched writes before a transaction
 
   await assert.rejects(
     repository.save({ goodsTypeId: "other", fieldDefinitions: [field] }),
+    (error) => error instanceof StorageError && error.code === STORAGE_ERROR_CODES.invalidData
+  );
+  assert.deepEqual(database.transactions, []);
+});
+
+test("item repository reads the goods-type index and hides deleted items", async () => {
+  const item = createItemRecord();
+  const database = createFieldReadDatabase([
+    item,
+    { ...item, id: "deleted", isDeleted: true, deletedAt: item.updatedAt }
+  ]);
+  const repository = createItemRepository(database);
+
+  assert.deepEqual((await repository.list("figures")).map(({ id }) => id), ["figure-1"]);
+  assert.deepEqual(database.queries, [
+    {
+      goodsTypeId: "figures",
+      indexName: INDEXES.itemsByGoodsType,
+      mode: "readonly",
+      storeName: OBJECT_STORES.items
+    }
+  ]);
+});
+
+test("item repository validates and writes one item transaction", async () => {
+  const database = createWriteDatabase();
+  const repository = createItemRepository(database);
+  const item = createItemRecord();
+
+  await repository.create(item);
+
+  assert.deepEqual(database.transactions, [
+    { mode: "readwrite", storeNames: OBJECT_STORES.items }
+  ]);
+  assert.deepEqual(database.writes, [
+    { record: item, storeName: OBJECT_STORES.items }
+  ]);
+});
+
+test("item repository rejects invalid records before opening a transaction", async () => {
+  const database = createWriteDatabase();
+  const repository = createItemRepository(database);
+
+  await assert.rejects(
+    repository.create({ id: "invalid" }),
     (error) => error instanceof StorageError && error.code === STORAGE_ERROR_CODES.invalidData
   );
   assert.deepEqual(database.transactions, []);

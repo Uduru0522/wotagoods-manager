@@ -6,6 +6,7 @@ import { createViewRenderer } from "../views/view-renderer.js";
 import { createGoodsTypeCreationOperation } from "../application/goods-types/create-goods-type.js";
 import { createFieldManagementOperations } from "../application/fields/manage-fields.js";
 import { createResetLocalDataOperation } from "../application/data/reset-local-data.js";
+import { createItemManagementOperations } from "../application/items/manage-items.js";
 
 export function mountAppRuntime({
   elements,
@@ -22,6 +23,7 @@ export function mountAppRuntime({
     createGoodsType: createGoodsTypeCreationOperation({ storage }),
     fieldManagement: createFieldManagementOperations({ storage }),
     goodsTypes,
+    itemManagement: createItemManagementOperations({ storage }),
     mutationController,
     onGoodsTypeCreated,
     onLocalDataReset,
