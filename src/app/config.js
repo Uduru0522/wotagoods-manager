@@ -10,6 +10,7 @@ export const APP_CONFIG = {
   },
   serviceWorkerPath: "service-worker.js",
   selectors: {
+    appShell: ".app-shell",
     primaryNavList: "#primaryNavList",
     utilityNavList: "#utilityNavList",
     viewPanel: "#viewPanel",

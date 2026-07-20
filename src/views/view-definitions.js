@@ -93,9 +93,9 @@ export function createViewDefinitions(goodsTypes) {
         kind: NAV_KINDS.view
       },
       content: {
-        heading: "Goods types will be created here.",
+        heading: "Create and manage goods types.",
         description:
-          "This view will create goods types and manage their custom fields in the local browser database."
+          "Create collections here. Custom-field management will build on the same local database model."
       }
     },
     {

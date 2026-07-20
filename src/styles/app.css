@@ -89,6 +89,11 @@ textarea {
   transition: background-color var(--motion-fast) ease;
 }
 
+.app-shell[data-mutating] .sidebar {
+  opacity: 0.62;
+  pointer-events: none;
+}
+
 .sidebar {
   display: flex;
   flex-direction: column;
@@ -102,7 +107,8 @@ textarea {
   transition:
     background-color var(--motion-fast) ease,
     border-color var(--motion-fast) ease,
-    padding var(--motion-layout) ease;
+    padding var(--motion-layout) ease,
+    opacity var(--motion-fast) ease;
 }
 
 .sidebar-header {
@@ -667,6 +673,33 @@ textarea {
   outline-offset: 2px;
 }
 
+.primary-action:disabled,
+.secondary-action:disabled {
+  cursor: wait;
+  filter: none;
+  opacity: 0.55;
+}
+
+.secondary-action {
+  min-height: 36px;
+  padding: 8px 14px;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-weight: 650;
+}
+
+.secondary-action:hover:not(:disabled) {
+  background: var(--surface-muted);
+}
+
+.secondary-action:focus-visible {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
 .content-panel {
   align-content: start;
   gap: 14px;
@@ -755,6 +788,180 @@ textarea {
 
 .administration-view .placeholder {
   min-height: 0;
+}
+
+.goods-type-creator {
+  width: 100%;
+  min-width: 0;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+.creator-landing {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 22px 24px;
+}
+
+.goods-type-creator h3,
+.goods-type-creator h4,
+.goods-type-creator p {
+  margin: 0;
+}
+
+.goods-type-creator h3 {
+  font-size: 19px;
+  line-height: 1.25;
+}
+
+.goods-type-creator h4 {
+  margin-top: 4px;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.goods-type-creator p {
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.creator-landing .primary-action {
+  flex: 0 0 auto;
+}
+
+.creator-workflow {
+  padding: 24px;
+}
+
+.goods-type-form,
+.goods-type-review {
+  display: grid;
+  gap: 20px;
+}
+
+.form-heading {
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--line);
+}
+
+.editor-field {
+  display: grid;
+  gap: 8px;
+}
+
+.editor-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+}
+
+.required-mark {
+  display: inline-grid;
+  width: 18px;
+  height: 18px;
+  place-items: center;
+  color: #b42318;
+  background: #fee4e2;
+  border-radius: 50%;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+:root[data-theme="dark"] .required-mark {
+  color: #ffb4ab;
+  background: #4a2424;
+}
+
+.editor-field input,
+.editor-field textarea {
+  width: 100%;
+  min-width: 0;
+  padding: 10px 12px;
+  color: var(--text);
+  background: var(--surface-muted);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  outline: 0;
+  resize: vertical;
+  transition:
+    background-color var(--motion-fast) ease,
+    border-color var(--motion-fast) ease,
+    box-shadow var(--motion-fast) ease;
+}
+
+.editor-field input[data-invalid] {
+  border-color: #d92d20;
+}
+
+.editor-field input:focus,
+.editor-field textarea:focus {
+  border-color: var(--focus);
+  box-shadow: 0 0 0 3px var(--focus-ring);
+}
+
+.editor-field small {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding-top: 2px;
+}
+
+.form-feedback:empty,
+.creation-status:empty {
+  display: none;
+}
+
+.form-feedback,
+.form-error {
+  color: #b42318 !important;
+}
+
+:root[data-theme="dark"] .form-feedback,
+:root[data-theme="dark"] .form-error {
+  color: #ffb4ab !important;
+}
+
+.form-warning {
+  padding: 12px 14px;
+  color: var(--text) !important;
+  background: var(--accent-tint);
+  border-left: 3px solid var(--accent);
+}
+
+.goods-type-review .meta-list {
+  margin-top: 0;
+}
+
+.goods-type-review .schema-table {
+  min-width: max(480px, 100%);
+}
+
+.creation-status {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.creation-progress {
+  width: min(240px, 55%);
+  height: 6px;
+  overflow: hidden;
+  accent-color: var(--accent);
+  border: 0;
 }
 
 .schema-table-wrap {
@@ -1109,6 +1316,20 @@ textarea {
   .setting-row {
     padding-right: 20px;
     padding-left: 20px;
+  }
+
+  .creator-landing {
+    align-items: stretch;
+    flex-direction: column;
+    padding: 20px;
+  }
+
+  .creator-landing .primary-action {
+    align-self: flex-start;
+  }
+
+  .creator-workflow {
+    padding: 20px;
   }
 
   .meta-list {

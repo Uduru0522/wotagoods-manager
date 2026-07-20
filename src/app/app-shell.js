@@ -2,6 +2,7 @@ import { createAppMode } from "./app-mode.js";
 import { getAppElements } from "./app-elements.js";
 import { mountAppRuntime } from "./app-runtime.js";
 import { bindLayoutTransition } from "./layout-transition.js";
+import { createMutationController } from "./mutation-controller.js";
 import { createStartupCoordinator } from "./startup-coordinator.js";
 import { renderStartupError, renderStartupLoading } from "./startup-state.js";
 import { bindViewScrollState } from "./view-scroll-state.js";
@@ -14,6 +15,7 @@ export function createApp({ storageFactory = createAppStorage } = {}) {
   const elements = getAppElements();
   const appMode = createAppMode();
   const themeController = createThemeController();
+  const mutationController = createMutationController(elements.appShell);
   let startupCoordinator;
 
   startupCoordinator = createStartupCoordinator({
@@ -25,6 +27,7 @@ export function createApp({ storageFactory = createAppStorage } = {}) {
         elements,
         goodsTypes,
         initialViewId,
+        mutationController,
         onGoodsTypeCreated: (goodsTypeId) =>
           startupCoordinator.refresh({ initialViewId: `goods:${goodsTypeId}` }),
         storage,

@@ -14,6 +14,7 @@ export function getAppElements() {
   const { selectors } = APP_CONFIG;
 
   return {
+    appShell: queryRequiredElement(selectors.appShell),
     primaryNavList: queryRequiredElement(selectors.primaryNavList),
     utilityNavList: queryRequiredElement(selectors.utilityNavList),
     viewPanel: queryRequiredElement(selectors.viewPanel),

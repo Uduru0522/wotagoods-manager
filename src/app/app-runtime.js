@@ -9,6 +9,7 @@ export function mountAppRuntime({
   elements,
   goodsTypes,
   initialViewId = APP_CONFIG.defaultViewId,
+  mutationController,
   onGoodsTypeCreated,
   storage,
   themeController
@@ -17,6 +18,7 @@ export function mountAppRuntime({
   const renderer = createViewRenderer({
     createGoodsType: createGoodsTypeCreationOperation({ storage }),
     goodsTypes,
+    mutationController,
     onGoodsTypeCreated,
     themeController
   });

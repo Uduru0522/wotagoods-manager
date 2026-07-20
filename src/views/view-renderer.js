@@ -1,18 +1,11 @@
 import { createElement } from "../shared/dom.js";
 import { RENDERERS } from "./view-metadata.js";
+import { renderAdministrationView } from "./administration/administration-view.js";
 import {
-  createActionHint,
   createMetaList,
-  createSchemaTable,
   createSettingsSection,
   createSwitchSetting
 } from "../shared/ui-components.js";
-
-const GOODS_TYPE_COLUMNS = Object.freeze([
-  { key: "id", label: "ID" },
-  { key: "displayName", label: "Display name" },
-  { key: "description", label: "Description" }
-]);
 
 export function renderPlaceholderView(view) {
   const article = createElement("article", { className: "placeholder" });
@@ -55,40 +48,6 @@ export function renderGoodsTypeChildView(view) {
   return article;
 }
 
-export function renderAdministrationView(view, { goodsTypes }) {
-  const article = createElement("article", { className: "settings-view administration-view" });
-  const overview = renderPlaceholderView(view);
-  const schemaSection = createSettingsSection({
-    title: "Goods type registry",
-    description:
-      "Goods types organize items and define the custom fields shown in forms and detail views."
-  });
-
-  if (goodsTypes.length > 0) {
-    schemaSection.append(
-      createSchemaTable({
-        columns: GOODS_TYPE_COLUMNS,
-        rows: goodsTypes
-      })
-    );
-  } else {
-    schemaSection.append(
-      createElement("p", {
-        className: "empty-note",
-        textContent:
-          "No goods types are saved yet. Goods-type creation will be available from this view."
-      })
-    );
-  }
-
-  overview.append(
-    createActionHint("Next action: add the Administration form for creating goods types.")
-  );
-  article.append(overview, schemaSection);
-
-  return article;
-}
-
 export function renderOptionsView({ themeController }) {
   const article = createElement("article", { className: "settings-view" });
   const colorTheme = createSettingsSection({
@@ -109,9 +68,20 @@ export function renderOptionsView({ themeController }) {
   return article;
 }
 
-export function createViewRenderer({ goodsTypes, themeController }) {
+export function createViewRenderer({
+  createGoodsType,
+  goodsTypes,
+  mutationController,
+  onGoodsTypeCreated,
+  themeController
+}) {
   const renderers = {
-    [RENDERERS.administration]: (view) => renderAdministrationView(view, { goodsTypes }),
+    [RENDERERS.administration]: () => renderAdministrationView({
+      createGoodsType,
+      goodsTypes,
+      mutationController,
+      onGoodsTypeCreated
+    }),
     [RENDERERS.goodsType]: (view) => renderGoodsTypeView(view),
     [RENDERERS.goodsTypeChild]: (view) => renderGoodsTypeChildView(view),
     [RENDERERS.options]: () => renderOptionsView({ themeController }),
