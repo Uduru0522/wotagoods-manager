@@ -104,7 +104,7 @@ navigation; explicit ordering can be added only when the UI supports reordering.
 
 ## Field Definition
 
-Field definitions drive forms, validation, detail labels, and item-list columns.
+Field definitions drive forms, validation, detail labels, and item presentations.
 They are records, not physical database columns.
 
 Initial data types:
@@ -148,13 +148,29 @@ options: {
 Labels may be added, but option removal and identity-changing edits remain
 deferred until item-value migration rules exist.
 
+Two-option toggle fields store customizable presentation labels while item
+values remain booleans:
+
+```js
+options: {
+  falseLabel: "Uncensored",
+  trueLabel: "Censored"
+}
+```
+
+Older toggle definitions with `options: null` are read as `No / Yes` for
+backward compatibility. Two-option fields are required, and new item forms
+always write one boolean value. An item
+may omit a required field only when it was created before that field existed;
+the UI marks such records as incomplete until item editing is implemented.
+
 ### Built-In Item Fields
 
 | Field | Required | User editable | Deletable |
 | --- | --- | --- | --- |
 | `id` | Yes | No | No |
 | `name` | Yes | Yes | No |
-| `image` | No | Yes | No |
+| `image` | Yes | Yes | No |
 
 `createdAt`, `updatedAt`, `isDeleted`, and `deletedAt` are system properties.
 Goods-type creation stores all three built-in field records so future renderers
@@ -200,10 +216,11 @@ Required asset metadata:
 - byte size
 - creation and update timestamps
 
-Item entry stores an optional processed low-resolution JPEG. Portrait output is
+Item entry requires a processed low-resolution JPEG. Portrait output is
 `560 x 792`; landscape output is `792 x 560`. Source files remain only in the
-in-memory draft and are not written to IndexedDB. Items without an image store
-`imageAssetId: null`.
+in-memory draft and are not written to IndexedDB. Legacy items may still have
+`imageAssetId: null`; they remain readable for backward compatibility, but new
+items cannot be created without an image.
 
 ## Soft Deletion
 

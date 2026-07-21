@@ -1,8 +1,8 @@
 # Architecture
 
 Wotagoods Manager is intentionally dependency-free for now. The code is organized
-so the app shell and IndexedDB boundary can stay stable while mutation workflows,
-real forms, and item views are added.
+so the app shell and IndexedDB boundary can stay stable while item-management
+workflows and alternate item presentations are added.
 
 ## Runtime Flow
 
@@ -27,7 +27,8 @@ real forms, and item views are added.
 Owns application assembly and app-level behavior.
 
 - `app-shell.js`: composition root and browser lifecycle owner.
-- `app-runtime.js`: builds data-dependent views, navigation, renderer, and router.
+- `app-runtime.js`: builds data-dependent views, navigation, renderer, and router,
+  and returns the runtime teardown function.
 - `app-elements.js`: required DOM lookup for shell elements.
 - `app-mode.js`: user/debug mode detection.
 - `config.js`: shared constants for selectors, theme, layout, and defaults.
@@ -35,7 +36,8 @@ Owns application assembly and app-level behavior.
 - `mutation-controller.js`: one global database-mutation lock and busy state.
 - `startup-state.js`: storage loading and recoverable startup-error rendering.
 - `startup-coordinator.js`: storage lifecycle, retries, and race-safe mounting.
-- `view-router.js`: active view switching, title updates, and view transition timing.
+- `view-router.js`: active view switching, title updates, transition timing, and
+  teardown of resources owned by the previous rendered view.
 - `view-scroll-state.js`: compact title-bar state based on view scroll position.
 
 ### `src/application/`
@@ -48,8 +50,9 @@ Owns storage-neutral use cases that coordinate domain records and adapter calls.
   field-definition records for one atomic adapter write.
 - `data/reset-local-data.js`: requests one atomic clear of all user-data stores
   while leaving application metadata and external backups intact.
-- `items/manage-items.js`: loads active field definitions, validates submitted
-  values, constructs item records, and requests item persistence.
+- `items/item-values.js`: normalizes and validates generated item-form values.
+- `items/manage-items.js`: loads active field definitions, constructs validated
+  item and image records, and requests atomic persistence.
 
 Application operations may depend on domain models and storage contracts. They
 must not depend on DOM elements, IndexedDB object-store names, or view modules.
@@ -88,7 +91,9 @@ Owns navigation rendering and navigation-specific scroll behavior.
 - `scrollable-row.js`: horizontal scroll behavior for narrow navigation.
 
 Navigation is data-driven through each view's `nav` metadata.
-Vertical drag scrolling is shared through `src/shared/drag-scroll.js`.
+Vertical drag scrolling is shared through `src/shared/drag-scroll.js`. Drag
+starts originating from dialogs, form controls, buttons, and links are excluded
+so nested interactions cannot move their parent scroll surface.
 
 ### `src/services/`
 
@@ -108,7 +113,7 @@ Generic helpers that should not know about Wotagoods-specific features.
 - `drag-scroll.js`: reusable pointer drag scrolling.
 - `icons.js`: icon creation.
 - `motion.js`: CSS timing parsing and reduced-motion helpers.
-- `ui-components.js`: reusable view components.
+- `ui-components.js`: reusable view components and neutral required markers.
 
 ### `src/styles/`
 
@@ -137,10 +142,16 @@ Owns view definitions and view rendering.
   Its field manager separates staging state, list rendering, editing, review, and
   orchestration into focused modules. Destructive local-data reset is isolated in
   its own typed-confirmation component.
-- `items/`: collection item-list views and the modal item-entry workflow.
-  Form generation, image processing, dialog orchestration, value formatting, and
-  list rendering remain separate. `items-view.js` owns collection loading and can
-  add a cards renderer later without changing the list renderer.
+- `items/`: collection browsing, responsive completeness warnings, fixed-stage
+  image cropping, and the modal item-entry workflow. `items-view.js` composes the
+  page action, browser, and entry dialog. `item-browser.js` owns asynchronous
+  loading and the active presentation; filtering, sorting, and list/card mode
+  belong at this boundary. Display-model, typed-value, thumbnail, and warning
+  helpers are presentation-neutral. Entry form, crop editor, review rendering,
+  generated form-field controls, save-error translation, and dialog orchestration
+  remain separate so editing can reuse them without depending on list markup. Dialog screens and routed views
+  both expose explicit teardown for observers, pending asynchronous work, and
+  temporary image resources.
 
 ## View Model
 
@@ -202,6 +213,11 @@ application operation; they do not open transactions or independently manage
 global busy state. `mutation-controller.js` prevents overlapping writes while
 storage adapters provide transaction atomicity and return plain records or
 domain errors.
+
+Rendered views may return an optional `destroy()` function alongside `content`
+and `topbarAction`. The router calls it before replacing that view, and runtime
+remounting destroys the previous router. Components that own observers, object
+URLs, timers, pending transitions, dialogs, or drafts must release them there.
 
 ## Service Worker
 

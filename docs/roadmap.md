@@ -61,7 +61,7 @@ order. It describes direction, not a release-date commitment.
 - retain input after recoverable failures
 - choose and crop one image to a supported paper ratio
 - process a low-resolution browser-local image
-- write the item and optional image asset atomically
+- require an image and write the item and image asset atomically
 - list newly registered items with thumbnails and custom values
 
 ## Current Product Milestone: Item List Management

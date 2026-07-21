@@ -33,11 +33,11 @@ graph TD
   B --> C["Open modal and load goods type and active fields"]
   C --> D["Render empty form and required markers"]
   D --> E["Edit form values"]
-  E --> F{"Add or change image?"}
-  F -->|Yes| G["Choose and crop image"]
+  E --> F{"Required image selected?"}
+  F -->|No| G["Choose and crop image"]
   G --> H["Keep processed preview in form state"]
   H --> E
-  F -->|No| I{"Form valid?"}
+  F -->|Yes| I{"Form valid?"}
   I -->|No| E
   I -->|Yes| J["Open review screen"]
   J --> K{"Confirm save?"}
@@ -51,12 +51,39 @@ graph TD
   P --> Q
 ```
 
-The draft and cropped image stay in UI memory until confirmation. Allowed crop
-ratios are portrait `1:sqrt(2)` and horizontal `sqrt(2):1`.
+The draft and cropped image stay in UI memory until confirmation. The complete
+source image is proportionally contained inside a fixed-height preview stage.
+The preview image and crop bounds share the same explicit rendered rectangle,
+so the complete source remains visible without horizontal scrolling. The user moves a crop rectangle
+directly, changes its size with one slider, and switches its ratio with a
+two-state portrait/landscape control. Those controls do not resize the stage.
+Allowed crop ratios are portrait `1:sqrt(2)` and horizontal `sqrt(2):1`; the
+generated JPEGs use fixed `560 x 792` or `792 x 560` output dimensions regardless
+of source size or selected crop size.
+
+Required entry fields use a neutral asterisk. Red warning indicators are
+reserved for invalid input and persisted items that are missing required values.
 
 Scheme-less web addresses are normalized to HTTPS and explicit HTTP addresses are
-rejected. Yes/no fields always store `true` or `false`; they do not have an unset
-state.
+rejected. Two-option toggle fields have user-defined labels and always store
+`true` or `false` for newly registered items. An unset value only exists when an
+older item predates a newly added required field; the item list marks that
+record as incomplete.
+
+The editor applies the same domain validation used by persistence before opening
+the review screen. Dates use four-digit years from `0001` through `9999`. Known
+save failures show their actionable cause; browser-storage quota failures are
+reported explicitly.
+
+Closing the Add item dialog preserves an unfinished draft. **Clear all** uses a
+two-click confirmation before discarding it. Closing the post-save success
+screen is different: reopening Add item starts with a fresh draft rather than
+returning to the previous Add another/Done screen.
+
+Two-option fields are always required. Administration does not expose an
+Optional setting for them. Legacy optional two-option definitions may be
+upgraded to required without rewriting items; records that lack a value remain
+visible with the same incomplete-item warning.
 
 ## Manage Fields
 
@@ -99,7 +126,7 @@ Rules:
 - deleting a field preserves existing item values
 - the complete staged set is validated before opening a transaction
 
-The current UI supports text, long text, number, date, yes/no, web-address, and
+The current UI supports text, long text, number, date, two-option toggle, web-address, and
 selection-list fields. Internal keys are generated once and are not exposed to
 ordinary users. Selection options receive stable IDs. Existing options may be
 extended but not removed.

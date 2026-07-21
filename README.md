@@ -28,8 +28,10 @@ Implemented:
 - automated static and unit checks
 - GitHub Pages deployment
 
-Item-list management and backup transfer are the next application features; their
-contracts are documented but not yet implemented.
+Item filtering, sorting, editing, and soft deletion are the next application
+features. A card presentation follows the completed list-management workflow;
+backup transfer comes afterward. Their contracts are documented but not yet
+implemented.
 
 ## Run Locally
 

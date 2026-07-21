@@ -55,9 +55,15 @@ For field-management changes:
 For item-registration changes:
 
 - add values for every supported custom field type and review them before saving
+- confirm image selection is required before review
 - confirm scheme-less web addresses normalize to HTTPS and HTTP is rejected
-- crop portrait and landscape images and confirm thumbnails survive reload
-- confirm yes/no fields always produce one boolean value through a toggle
+- move and resize portrait and landscape crop rectangles, then confirm fixed-resolution thumbnails survive reload
+- confirm two-option fields use their configured labels and always produce one boolean value for new items
+- confirm Administration reveals the field editor after Add, Edit, and Remove actions
+- confirm item URLs open as links and saved two-option values render as read-only selectors
+- confirm Add item preserves unfinished drafts, confirms Clear all, and resets after closing the success screen
+- confirm dialog controls never trigger background drag scrolling
+- test long field names, values, and two-option labels in both entry and list layouts
 - confirm required values are enforced after whitespace normalization
 - reload user mode and confirm saved items remain
 - reload debug mode and confirm created items disappear
@@ -158,11 +164,21 @@ Stateful workflows should use `src/shared/content-transition.js`. One `--motion-
 is used before replacement and one after it, so their combined duration must remain
 within the same `200ms` ceiling.
 
+Rendered views that allocate browser resources should return `destroy()` from
+their renderer result. Cancel pending transitions and loads, disconnect
+observers, close dialogs, and revoke object URLs during teardown.
+
 JavaScript fallbacks for CSS timing belong in `src/shared/motion.js`. Text action
 buttons should use `src/shared/action-button.js` so default type and class behavior
 remain consistent.
 
-Responsive behavior currently has one breakpoint at `760px`, matching `APP_CONFIG.layout.narrowQuery`.
+Responsive behavior currently has one app-shell breakpoint at `1100px`, matching `APP_CONFIG.layout.narrowQuery`. Item rows also use a container query so their presentation follows the available workspace width rather than the viewport alone.
+
+Collection loading and active item presentation belong in
+`src/views/items/item-browser.js`. Keep list-only markup in `item-list.js`; place
+field/value interpretation in the shared item display helpers so list and card
+presentations do not duplicate it. Filtering and sorting should produce an item
+set for the active presentation rather than being embedded in either renderer.
 
 ## Dependency Rules
 
