@@ -192,14 +192,21 @@ test("DebugStorage lists fixture fields and applies isolated field changes", asy
   await storage.initialize();
   const fixtureFields = await storage.listFieldDefinitions("figures");
 
-  assert.deepEqual(fixtureFields.map(({ key }) => key), ["id", "name", "image"]);
+  assert.deepEqual(fixtureFields.map(({ key }) => key), [
+    "id",
+    "name",
+    "image",
+    "manufacturer",
+    "scale",
+    "edition"
+  ]);
 
   const customField = createFieldDefinitionRecord(
     {
-      id: "figures-scale",
+      id: "figures-test-scale",
       goodsTypeId: "figures",
-      key: "scale",
-      displayName: "Scale",
+      key: "test_scale",
+      displayName: "Test scale",
       dataType: "text",
       position: 3
     },
@@ -211,8 +218,13 @@ test("DebugStorage lists fixture fields and applies isolated field changes", asy
   });
 
   const firstRead = await storage.listFieldDefinitions("figures");
-  firstRead.at(-1).displayName = "External change";
-  assert.equal((await storage.listFieldDefinitions("figures")).at(-1).displayName, "Scale");
+  firstRead.find(({ id }) => id === customField.id).displayName = "External change";
+  assert.equal(
+    (await storage.listFieldDefinitions("figures"))
+      .find(({ id }) => id === customField.id)
+      .displayName,
+    "Test scale"
+  );
 
   await assert.rejects(
     storage.saveFieldDefinitions({
@@ -221,7 +233,7 @@ test("DebugStorage lists fixture fields and applies isolated field changes", asy
     }),
     (error) => error.code === STORAGE_ERROR_CODES.operationFailed
   );
-  assert.equal((await storage.listFieldDefinitions("figures")).length, 4);
+  assert.equal((await storage.listFieldDefinitions("figures")).length, 7);
 });
 
 test("DebugStorage creates and lists isolated item records", async () => {
@@ -250,6 +262,33 @@ test("DebugStorage creates and lists isolated item records", async () => {
     }),
     /invalid or duplicate identity/
   );
+});
+
+test("DebugStorage fixtures demonstrate every supported custom field type", async () => {
+  const storage = createDebugStorage();
+
+  await storage.initialize();
+  const goodsTypes = await storage.listGoodsTypes();
+  const allFields = (await Promise.all(
+    goodsTypes.map(({ id }) => storage.listFieldDefinitions(id))
+  )).flat();
+  const customTypes = new Set(
+    allFields.filter(({ isBuiltIn }) => !isBuiltIn).map(({ dataType }) => dataType)
+  );
+  const tapestries = await storage.listItems("tapestries");
+  const legacyItem = tapestries.find(({ id }) => id === "tapestry-legacy-record");
+  const optionalItem = tapestries.find(({ id }) => id === "tapestry-winter-cafe");
+  const asset = await storage.getAsset(tapestries[0].imageAssetId);
+
+  assert.deepEqual(
+    [...customTypes].sort(),
+    ["boolean", "date", "long_text", "number", "select", "text", "url"]
+  );
+  assert.equal(tapestries.length, 3);
+  assert.equal(Object.hasOwn(legacyItem.customValues, "tapestries-series"), false);
+  assert.equal(Object.hasOwn(optionalItem.customValues, "tapestries-notes"), false);
+  assert.equal(asset.mediaType, "image/svg+xml");
+  assert.ok(asset.data.size > 0);
 });
 
 test("DebugStorage keeps image assets linked to their item", async () => {
@@ -288,7 +327,7 @@ test("DebugStorage reset clears all temporary domain records", async () => {
 
   await storage.initialize();
   assert.equal((await storage.listGoodsTypes()).length, 3);
-  assert.equal((await storage.listFieldDefinitions("figures")).length, 3);
+  assert.equal((await storage.listFieldDefinitions("figures")).length, 6);
 
   await storage.createItem({
     asset: null,

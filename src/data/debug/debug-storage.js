@@ -3,20 +3,22 @@ import {
   StorageError
 } from "../contracts/storage-contract.js";
 import {
+  createDebugAssets,
   createDebugFieldDefinitions,
-  createDebugGoodsTypes
+  createDebugGoodsTypes,
+  createDebugItems
 } from "./debug-fixtures.js";
 import { parseFieldDefinitionRecord } from "../models/field-definition.js";
 import { parseGoodsTypeRecord } from "../models/goods-type.js";
 import { parseItemRecord } from "../models/item.js";
 import { parseAssetRecord } from "../models/asset.js";
 
-export function createDebugStorage({
-  goodsTypes = createDebugGoodsTypes(),
-  fieldDefinitions = createDebugFieldDefinitions(goodsTypes),
-  items = [],
-  assets = []
-} = {}) {
+export function createDebugStorage(options = {}) {
+  const usesDefaultCatalog = options.goodsTypes === undefined;
+  const goodsTypes = options.goodsTypes ?? createDebugGoodsTypes();
+  const fieldDefinitions = options.fieldDefinitions ?? createDebugFieldDefinitions(goodsTypes);
+  const items = options.items ?? (usesDefaultCatalog ? createDebugItems() : []);
+  const assets = options.assets ?? (usesDefaultCatalog ? createDebugAssets() : []);
   const records = goodsTypes.map(parseGoodsTypeRecord);
   const fieldRecords = fieldDefinitions.map(parseFieldDefinitionRecord);
   const itemRecords = items.map(parseItemRecord);

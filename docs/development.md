@@ -119,7 +119,9 @@ Keep route/view IDs stable. They are used by navigation state and router state.
 
 ## Adding A Goods Type For Debug Mode
 
-Edit `GOODS_TYPE_FIXTURES` in `src/data/debug/debug-fixtures.js`.
+Edit the fixture definitions in `src/data/debug/debug-fixtures.js`. The default
+catalog intentionally covers every supported custom field type, optional and
+missing required values, configurable toggles, and both image orientations.
 
 Use stable IDs and domain-facing property names:
 
@@ -131,8 +133,14 @@ Use stable IDs and domain-facing property names:
 }
 ```
 
+Keep fixture IDs stable and link each item image through matching item and asset
+IDs. Construct records through the domain model factories so invalid fixture data
+fails during startup and in automated tests.
+
 This is only debug data. `DebugStorage` clones these records and never writes them
-to the user database.
+to the user database. Supplying custom goods types to `createDebugStorage()` also
+disables the default item and asset catalog unless those records are supplied
+explicitly.
 
 ## Theme Rules
 
