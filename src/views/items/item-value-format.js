@@ -4,7 +4,7 @@ export function formatItemFieldValue(field, value) {
   }
 
   if (field.dataType === "boolean") {
-    return value ? "Yes" : "No";
+    return value ? field.options.trueLabel : field.options.falseLabel;
   }
 
   if (field.dataType === "select") {

@@ -1,16 +1,8 @@
 import { createActionButton } from "../../shared/action-button.js";
 import { createElement } from "../../shared/dom.js";
+import { createRequiredMark } from "../../shared/ui-components.js";
+import { createItemCropEditor } from "./item-crop-editor.js";
 import { processImageSource } from "./image-processor.js";
-
-const MAX_SOURCE_BYTES = 20 * 1024 * 1024;
-
-function updatePreviewPosition(source, image) {
-  image.style.objectPosition = `${source.positionX * 100}% ${source.positionY * 100}%`;
-}
-
-function clampPosition(value) {
-  return Math.min(1, Math.max(0, value));
-}
 
 function releaseProcessedImage(draft) {
   if (draft.processedImageUrl) {
@@ -45,142 +37,91 @@ export async function prepareItemImage(draft) {
   return draft.image;
 }
 
+async function readImageOrientation(file) {
+  const bitmap = await createImageBitmap(file);
+  const orientation = bitmap.width >= bitmap.height ? "landscape" : "portrait";
+  bitmap.close();
+  return orientation;
+}
+
 export function createItemImageField({ draft, field }) {
-  const section = createElement("section", { className: "item-image-field" });
+  const element = createElement("section", { className: "item-image-field" });
   const heading = createElement("div", { className: "editor-label" });
-  const picker = createElement("label", { className: "item-image-picker" });
+  const content = createElement("div", { className: "item-image-content" });
   const input = createElement("input", {
     attributes: { accept: "image/*", type: "file" },
     className: "item-image-input"
   });
-  const controls = createElement("div", { className: "item-image-controls" });
   const feedback = createElement("p", {
     attributes: { "aria-live": "polite" },
     className: "form-feedback"
   });
+  let cropEditor = null;
+  let selectionVersion = 0;
 
-  heading.append(createElement("strong", { textContent: field?.displayName ?? "Image" }));
-  picker.append(input);
-  picker.addEventListener("click", (event) => {
-    if (draft.imageSource && event.target !== input) {
-      event.preventDefault();
-    }
-  });
+  heading.append(
+    createElement("strong", { textContent: field?.displayName ?? "Image" }),
+    createRequiredMark()
+  );
 
   function render() {
-    picker.querySelectorAll(":scope > :not(input)").forEach((element) => element.remove());
-    controls.replaceChildren();
+    cropEditor?.destroy();
+    cropEditor = null;
+    content.replaceChildren();
 
     if (!draft.imageSource) {
-      picker.classList.remove("has-image");
-      picker.append(
-        createElement("span", { className: "item-image-prompt", textContent: "Choose image" })
-      );
+      const chooseButton = createActionButton("Choose image", {
+        className: "item-image-choose secondary-action"
+      });
+      chooseButton.addEventListener("click", () => input.click());
+      content.append(chooseButton);
       return;
     }
 
-    const source = draft.imageSource;
-    const image = createElement("img", {
-      attributes: {
-        alt: "Selected item crop",
-        draggable: "false",
-        src: source.previewUrl,
-        title: "Drag to adjust crop"
-      }
-    });
-    const modes = createElement("div", {
-      attributes: { "aria-label": "Image orientation", role: "group" },
-      className: "item-image-modes"
-    });
-    const removeButton = createActionButton("Remove", { className: "secondary-action" });
-
-    picker.classList.add("has-image", `is-${source.orientation}`);
-    picker.classList.remove(
-      source.orientation === "portrait" ? "is-landscape" : "is-portrait"
-    );
-    updatePreviewPosition(source, image);
-    picker.append(image);
-
-    ["portrait", "landscape"].forEach((orientation) => {
-      const button = createActionButton(
-        orientation === "portrait" ? "Portrait" : "Landscape",
-        { className: "item-image-mode" }
-      );
-      button.setAttribute("aria-pressed", String(source.orientation === orientation));
-      button.addEventListener("click", () => {
-        source.orientation = orientation;
-        releaseProcessedImage(draft);
+    cropEditor = createItemCropEditor({
+      source: draft.imageSource,
+      onChange: () => releaseProcessedImage(draft),
+      onRemove: () => {
+        selectionVersion += 1;
+        clearItemImageDraft(draft);
+        input.value = "";
         render();
-      });
-      modes.append(button);
-    });
-
-    let startX = 0;
-    let startY = 0;
-    let initialX = 0;
-    let initialY = 0;
-
-    image.addEventListener("pointerdown", (event) => {
-      startX = event.clientX;
-      startY = event.clientY;
-      initialX = source.positionX;
-      initialY = source.positionY;
-      image.setPointerCapture(event.pointerId);
-      picker.dataset.dragging = "true";
-    });
-    image.addEventListener("pointermove", (event) => {
-      if (!image.hasPointerCapture(event.pointerId)) {
-        return;
       }
-
-      source.positionX = clampPosition(
-        initialX - (event.clientX - startX) / picker.clientWidth
-      );
-      source.positionY = clampPosition(
-        initialY - (event.clientY - startY) / picker.clientHeight
-      );
-      releaseProcessedImage(draft);
-      updatePreviewPosition(source, image);
     });
-    image.addEventListener("pointerup", (event) => {
-      image.releasePointerCapture(event.pointerId);
-      delete picker.dataset.dragging;
-    });
-    removeButton.addEventListener("click", () => {
-      clearItemImageDraft(draft);
-      input.value = "";
-      render();
-    });
-    controls.append(modes, removeButton);
+    content.append(cropEditor.stage, cropEditor.controls);
   }
 
   input.addEventListener("change", async () => {
     const [file] = input.files;
+    const requestedVersion = ++selectionVersion;
 
     if (!file) {
       return;
     }
 
-    if (!file.type.startsWith("image/") || file.size > MAX_SOURCE_BYTES) {
+    if (!file.type.startsWith("image/")) {
       input.value = "";
-      feedback.textContent = "Choose a supported image smaller than 20 MB.";
+      feedback.textContent = "Choose a supported image file.";
       return;
     }
 
-    let bitmap;
+    let orientation;
 
     try {
-      bitmap = await createImageBitmap(file);
+      orientation = await readImageOrientation(file);
     } catch {
       input.value = "";
       feedback.textContent = "This image format could not be opened.";
       return;
     }
 
-    const orientation = bitmap.width >= bitmap.height ? "landscape" : "portrait";
-    bitmap.close();
+    if (requestedVersion !== selectionVersion) {
+      return;
+    }
+
     clearItemImageDraft(draft);
     draft.imageSource = {
+      cropScale: 1,
       file,
       orientation,
       positionX: 0.5,
@@ -191,7 +132,25 @@ export function createItemImageField({ draft, field }) {
     render();
   });
 
-  section.append(heading, picker, controls, feedback);
+  element.append(heading, input, content, feedback);
   render();
-  return section;
+  return {
+    element,
+    destroy() {
+      selectionVersion += 1;
+      cropEditor?.destroy();
+      cropEditor = null;
+    },
+    validate() {
+      if (draft.imageSource) {
+        feedback.textContent = "";
+        return true;
+      }
+
+      feedback.textContent = "Choose an image before reviewing this item.";
+      content.querySelector("button")?.focus();
+      element.scrollIntoView({ behavior: "smooth", block: "center" });
+      return false;
+    }
+  };
 }

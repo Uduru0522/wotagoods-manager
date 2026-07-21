@@ -1,4 +1,4 @@
-const CACHE_NAME = "wotagoods-manager-v66";
+const CACHE_NAME = "wotagoods-manager-v83";
 
 const ASSET_GROUPS = {
   app: [
@@ -6,6 +6,7 @@ const ASSET_GROUPS = {
     "./src/application/fields/field-configuration.js",
     "./src/application/fields/manage-fields.js",
     "./src/application/goods-types/create-goods-type.js",
+    "./src/application/items/item-values.js",
     "./src/application/items/manage-items.js",
     "./src/app/app-elements.js",
     "./src/app/app-mode.js",
@@ -82,9 +83,18 @@ const ASSET_GROUPS = {
     "./src/views/administration/local-data-reset.js",
     "./src/views/items/item-entry-dialog.js",
     "./src/views/items/item-entry-form.js",
+    "./src/views/items/item-entry-review.js",
+    "./src/views/items/item-form-field.js",
+    "./src/views/items/item-browser.js",
+    "./src/views/items/item-crop-editor.js",
+    "./src/views/items/item-display-model.js",
+    "./src/views/items/item-display-value.js",
     "./src/views/items/image-processor.js",
     "./src/views/items/item-image-field.js",
     "./src/views/items/item-list.js",
+    "./src/views/items/item-missing-warning.js",
+    "./src/views/items/item-save-error.js",
+    "./src/views/items/item-thumbnail.js",
     "./src/views/items/item-value-format.js",
     "./src/views/items/items-view.js",
     "./src/views/view-definitions.js",

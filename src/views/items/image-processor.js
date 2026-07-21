@@ -3,13 +3,36 @@ const OUTPUT_SIZES = Object.freeze({
   portrait: Object.freeze({ width: 560, height: 792 })
 });
 
+export function calculateContainedRectangle(
+  sourceWidth,
+  sourceHeight,
+  containerWidth,
+  containerHeight
+) {
+  if (![sourceWidth, sourceHeight, containerWidth, containerHeight].every((value) => value > 0)) {
+    return null;
+  }
+
+  const scale = Math.min(containerWidth / sourceWidth, containerHeight / sourceHeight);
+  const width = sourceWidth * scale;
+  const height = sourceHeight * scale;
+
+  return {
+    x: (containerWidth - width) / 2,
+    y: (containerHeight - height) / 2,
+    width,
+    height
+  };
+}
+
 export function calculateCropRectangle(
   sourceWidth,
   sourceHeight,
   targetWidth,
   targetHeight,
   positionX = 0.5,
-  positionY = 0.5
+  positionY = 0.5,
+  cropScale = 1
 ) {
   const targetRatio = targetWidth / targetHeight;
   const sourceRatio = sourceWidth / sourceHeight;
@@ -21,6 +44,10 @@ export function calculateCropRectangle(
   } else {
     height = sourceWidth / targetRatio;
   }
+
+  const normalizedScale = Math.min(1, Math.max(0.1, cropScale));
+  width *= normalizedScale;
+  height *= normalizedScale;
 
   return {
     x: (sourceWidth - width) * Math.min(1, Math.max(0, positionX)),
@@ -54,7 +81,8 @@ export async function processImageSource(source) {
     output.width,
     output.height,
     source.positionX,
-    source.positionY
+    source.positionY,
+    source.cropScale
   );
   const canvas = document.createElement("canvas");
   const context = canvas.getContext("2d", { alpha: false });

@@ -201,7 +201,7 @@ export function createFieldManager({ fieldManagement, goodsTypes, mutationContro
           }
         })
       );
-    });
+    }, { afterUpdate: () => editorSlot.scrollIntoView({ block: "nearest" }) });
   }
 
   function openEditEditor(editorSlot, editorTransition, field) {
@@ -221,7 +221,7 @@ export function createFieldManager({ fieldManagement, goodsTypes, mutationContro
           }
         })
       );
-    });
+    }, { afterUpdate: () => editorSlot.scrollIntoView({ block: "nearest" }) });
   }
 
   function openDeleteConfirmation(editorSlot, editorTransition, field) {
@@ -247,7 +247,10 @@ export function createFieldManager({ fieldManagement, goodsTypes, mutationContro
     });
     actions.append(cancelButton, deleteButton);
     confirmation.append(actions);
-    editorTransition.replace(() => editorSlot.replaceChildren(confirmation));
+    editorTransition.replace(
+      () => editorSlot.replaceChildren(confirmation),
+      { afterUpdate: () => editorSlot.scrollIntoView({ block: "nearest" }) }
+    );
   }
 
   function renderReview() {

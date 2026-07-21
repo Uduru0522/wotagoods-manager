@@ -1,118 +1,28 @@
 import { createActionButton } from "../../shared/action-button.js";
 import { createElement } from "../../shared/dom.js";
-import { normalizeHttpsUrl } from "../../application/items/manage-items.js";
+import { createRequiredMark } from "../../shared/ui-components.js";
+import { normalizeItemValues } from "../../application/items/item-values.js";
+import { createItemFormField } from "./item-form-field.js";
 import {
   createItemImageField,
   prepareItemImage
 } from "./item-image-field.js";
 
-function createRequiredMark() {
-  return createElement("span", {
-    attributes: { "aria-label": "Required" },
-    className: "required-mark",
-    textContent: "!"
-  });
-}
-
 function createFieldLabel(field, input) {
   const wrapper = createElement("label", { className: "editor-field item-form-field" });
   const labelRow = createElement("span", { className: "editor-label" });
 
-  labelRow.append(createElement("strong", { textContent: field.displayName }));
+  labelRow.append(
+    createElement("strong", {
+      attributes: { title: field.displayName },
+      textContent: field.displayName
+    })
+  );
   if (field.isRequired) {
     labelRow.append(createRequiredMark());
   }
   wrapper.append(labelRow, input);
   return wrapper;
-}
-
-function createSelectInput(field) {
-  const select = createElement("select", {
-    attributes: field.isRequired ? { required: "" } : {}
-  });
-
-  select.append(createElement("option", { attributes: { value: "" }, textContent: "Not set" }));
-  field.options.choices.forEach((choice) => {
-    select.append(
-      createElement("option", {
-        attributes: { value: choice.id },
-        textContent: choice.label
-      })
-    );
-  });
-  return select;
-}
-
-function createBooleanInput() {
-  return createElement("input", {
-    attributes: { role: "switch", type: "checkbox" },
-    className: "switch-input item-boolean-input"
-  });
-}
-
-function createFieldControl(field) {
-  if (field.dataType === "long_text") {
-    return createElement("textarea", {
-      attributes: {
-        rows: "4",
-        ...(field.isRequired ? { required: "" } : {})
-      }
-    });
-  }
-
-  if (field.dataType === "select") {
-    return createSelectInput(field);
-  }
-
-  if (field.dataType === "boolean") {
-    return createBooleanInput(field);
-  }
-
-  const inputTypes = {
-    date: "date",
-    number: "number",
-    text: "text",
-    url: "text"
-  };
-
-  return createElement("input", {
-    attributes: {
-      type: inputTypes[field.dataType] ?? "text",
-      ...(field.dataType === "url" ? { inputmode: "url" } : {}),
-      ...(field.dataType === "number" ? { step: "any" } : {}),
-      ...(field.isRequired ? { required: "" } : {})
-    }
-  });
-}
-
-function readControlValue(field, control) {
-  if (field.dataType === "boolean") {
-    return control.checked;
-  }
-
-  if (control.value === "") {
-    return undefined;
-  }
-
-  if (field.dataType === "number") {
-    return control.valueAsNumber;
-  }
-
-  return control.value;
-}
-
-function setControlValue(field, control, value) {
-  if (field.dataType === "boolean") {
-    control.checked = value === true;
-    return;
-  }
-
-  if (value === undefined || value === null) {
-    control.value = "";
-    return;
-  }
-
-  control.value = value;
 }
 
 export function createItemEntryForm({ draft, fields, onReview }) {
@@ -128,7 +38,7 @@ export function createItemEntryForm({ draft, fields, onReview }) {
   });
   const customFields = fields.filter((field) => !field.isBuiltIn);
   const imageField = fields.find((field) => field.isBuiltIn && field.key === "image");
-  const controls = new Map();
+  const fieldEditors = new Map();
   const feedback = createElement("p", {
     attributes: { "aria-live": "polite" },
     className: "form-feedback"
@@ -138,54 +48,47 @@ export function createItemEntryForm({ draft, fields, onReview }) {
     type: "submit"
   });
   const actions = createElement("div", { className: "form-actions" });
+  const imageEditor = createItemImageField({ draft, field: imageField });
 
   nameInput.value = draft.name;
   fieldGrid.append(
     createFieldLabel(nameField, nameInput),
-    createItemImageField({ draft, field: imageField })
+    imageEditor.element
   );
 
   customFields.forEach((field) => {
-    const control = createFieldControl(field);
-    controls.set(field.id, control);
-    setControlValue(
+    const editor = createItemFormField(
       field,
-      control,
       draft.customValues[field.id] ?? field.defaultValue
     );
-    fieldGrid.append(createFieldLabel(field, control));
+
+    fieldEditors.set(field.id, editor);
+    fieldGrid.append(editor.element);
   });
 
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
 
-    customFields
-      .filter((field) => field.dataType === "url")
-      .forEach((field) => {
-        const control = controls.get(field.id);
-        control.setCustomValidity("");
-
-        if (!control.value.trim()) {
-          return;
-        }
-
-        try {
-          control.value = normalizeHttpsUrl(control.value, field.displayName);
-        } catch (error) {
-          control.setCustomValidity(error.message);
-        }
-      });
-
-    if (!form.reportValidity()) {
+    if (!form.reportValidity() || !imageEditor.validate()) {
       return;
     }
 
-    const customValues = Object.fromEntries(
+    const submittedValues = Object.fromEntries(
       customFields.flatMap((field) => {
-        const value = readControlValue(field, controls.get(field.id));
+        const value = fieldEditors.get(field.id).readValue();
         return value === undefined ? [] : [[field.id, value]];
       })
     );
+    let customValues;
+
+    try {
+      customValues = normalizeItemValues(customFields, submittedValues);
+    } catch (error) {
+      feedback.textContent = error instanceof Error
+        ? error.message
+        : "One or more item values are invalid.";
+      return;
+    }
 
     draft.name = nameInput.value.trim();
     draft.customValues = customValues;
@@ -207,7 +110,7 @@ export function createItemEntryForm({ draft, fields, onReview }) {
   heading.append(
     createElement("h4", { textContent: "Item information" }),
     createElement("p", {
-      textContent: "Required fields are marked with an exclamation point."
+      textContent: "Required fields are marked with an asterisk."
     })
   );
   form.append(
@@ -218,5 +121,10 @@ export function createItemEntryForm({ draft, fields, onReview }) {
   );
   requestAnimationFrame(() => nameInput.focus());
 
-  return form;
+  return {
+    element: form,
+    destroy() {
+      imageEditor.destroy();
+    }
+  };
 }

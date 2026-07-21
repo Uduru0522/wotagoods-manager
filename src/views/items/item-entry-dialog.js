@@ -7,10 +7,10 @@ import {
   getAnimationDurationMs,
   prefersReducedMotion
 } from "../../shared/motion.js";
-import { createMetaList } from "../../shared/ui-components.js";
 import { createItemEntryForm } from "./item-entry-form.js";
+import { createItemEntryReview } from "./item-entry-review.js";
 import { clearItemImageDraft } from "./item-image-field.js";
-import { formatItemFieldValue } from "./item-value-format.js";
+import { describeItemSaveError } from "./item-save-error.js";
 
 function createDraft() {
   return {
@@ -47,6 +47,10 @@ export function createItemEntryDialog({
     },
     className: "item-entry-close"
   });
+  const clearButton = createActionButton("Clear all", {
+    className: "item-entry-clear secondary-action"
+  });
+  const headerActions = createElement("div", { className: "item-entry-header-actions" });
   const body = createElement("div", { className: "item-entry-body" });
   const contentTransition = createContentTransition(body, { animateInitial: true });
   let closeTimer = 0;
@@ -55,16 +59,57 @@ export function createItemEntryDialog({
   let isClosing = false;
   let isLoading = false;
   let isSaving = false;
+  let clearConfirmationTimer = 0;
+  let currentScreen = "loading";
+  let destroyed = false;
+  let destroyCurrentScreen = null;
+  let loadVersion = 0;
 
   closeButton.append(createIcon("close"));
-  header.append(heading, closeButton);
+  headerActions.append(clearButton, closeButton);
+  header.append(heading, headerActions);
   dialog.append(header, body);
+
+  function resetClearConfirmation() {
+    globalThis.clearTimeout(clearConfirmationTimer);
+    clearConfirmationTimer = 0;
+    delete clearButton.dataset.confirming;
+    clearButton.textContent = "Clear all";
+  }
+
+  function resetDraft() {
+    clearItemImageDraft(draft);
+    draft = createDraft();
+    resetClearConfirmation();
+  }
+
+  function setScreen(screen) {
+    currentScreen = screen;
+    clearButton.hidden = screen === "loading" || screen === "saving" || screen === "success";
+    clearButton.disabled = screen === "loading" || screen === "saving";
+  }
+
+  function replaceScreen(createScreen) {
+    contentTransition.replace(() => {
+      if (destroyed) {
+        return;
+      }
+
+      destroyCurrentScreen?.();
+      const screen = createScreen();
+      const element = screen?.element ?? screen;
+
+      destroyCurrentScreen = screen?.destroy ?? null;
+      body.replaceChildren(element);
+    });
+  }
 
   function renderMessage(
     title,
     description,
     { className = "item-entry-status", showProgress = false } = {}
   ) {
+    setScreen(showProgress ? "saving" : "loading");
     const status = createElement("div", { className });
 
     if (showProgress) {
@@ -75,62 +120,27 @@ export function createItemEntryDialog({
       createElement("h4", { textContent: title }),
       createElement("p", { textContent: description })
     );
-    contentTransition.replace(() => body.replaceChildren(status));
+    replaceScreen(() => status);
   }
 
   function renderEditor() {
-    contentTransition.replace(() => {
-      body.replaceChildren(
-        createItemEntryForm({
-          draft,
-          fields,
-          onReview: renderReview
-        })
-      );
-    });
+    setScreen("editor");
+    replaceScreen(() => createItemEntryForm({
+      draft,
+      fields,
+      onReview: renderReview
+    }));
   }
 
   function renderReview(errorMessage = "") {
-    const review = createElement("div", { className: "item-entry-review" });
-    const headingBlock = createElement("div", { className: "form-heading" });
-    const customFields = fields.filter((field) => !field.isBuiltIn);
-    const nameField = fields.find((field) => field.isBuiltIn && field.key === "name");
-    const values = [
-      { label: nameField?.displayName ?? "Name", value: draft.name },
-      ...customFields.map((field) => ({
-        label: field.displayName,
-        value: formatItemFieldValue(field, draft.customValues[field.id])
-      }))
-    ];
-    const feedback = createElement("p", {
-      attributes: { "aria-live": "polite" },
-      className: errorMessage ? "form-error" : "form-feedback",
-      textContent: errorMessage
-    });
-    const actions = createElement("div", { className: "form-actions" });
-    const backButton = createActionButton("Back");
-    const saveButton = createActionButton(errorMessage ? "Try again" : "Save item", {
-      className: "primary-action"
-    });
-
-    headingBlock.append(
-      createElement("h4", { textContent: "Review item" }),
-      createElement("p", { textContent: "Confirm the values before saving them locally." })
-    );
-    if (draft.processedImageUrl) {
-      review.append(
-        createElement("img", {
-          attributes: { alt: "Processed item image", src: draft.processedImageUrl },
-          className: "item-review-image"
-        })
-      );
-    }
-    backButton.addEventListener("click", renderEditor);
-    saveButton.addEventListener("click", saveItem);
-    actions.append(backButton, saveButton);
-    review.prepend(headingBlock);
-    review.append(createMetaList(values), feedback, actions);
-    contentTransition.replace(() => body.replaceChildren(review));
+    setScreen("review");
+    replaceScreen(() => createItemEntryReview({
+      draft,
+      errorMessage,
+      fields,
+      onBack: renderEditor,
+      onSave: saveItem
+    }));
   }
 
   async function saveItem() {
@@ -157,12 +167,14 @@ export function createItemEntryDialog({
         await onCreated(result.item);
       });
 
-      renderSuccess();
+      if (!destroyed) {
+        renderSuccess();
+      }
     } catch (error) {
       console.error("Item creation failed:", error);
-      renderReview(
-        "The item could not be saved. Your entries are still available; check browser storage and try again."
-      );
+      if (!destroyed) {
+        renderReview(describeItemSaveError(error));
+      }
     } finally {
       isSaving = false;
       closeButton.disabled = false;
@@ -170,6 +182,7 @@ export function createItemEntryDialog({
   }
 
   function renderSuccess() {
+    setScreen("success");
     const success = createElement("div", { className: "item-entry-success" });
     const actions = createElement("div", { className: "form-actions" });
     const doneButton = createActionButton("Done", { className: "primary-action" });
@@ -177,12 +190,10 @@ export function createItemEntryDialog({
 
     doneButton.addEventListener("click", () => {
       requestClose();
-      clearItemImageDraft(draft);
-      draft = createDraft();
+      resetDraft();
     });
     anotherButton.addEventListener("click", () => {
-      clearItemImageDraft(draft);
-      draft = createDraft();
+      resetDraft();
       renderEditor();
     });
     actions.append(anotherButton, doneButton);
@@ -191,7 +202,7 @@ export function createItemEntryDialog({
       createElement("p", { textContent: `${draft.name} is now stored in this collection.` }),
       actions
     );
-    contentTransition.replace(() => body.replaceChildren(success));
+    replaceScreen(() => success);
   }
 
   async function loadFields() {
@@ -200,12 +211,22 @@ export function createItemEntryDialog({
     }
 
     isLoading = true;
+    const requestedVersion = ++loadVersion;
     renderMessage("Loading item fields...", "Reading the collection configuration.");
 
     try {
       fields = await itemManagement.getEntryFields(goodsType.id);
+
+      if (destroyed || requestedVersion !== loadVersion) {
+        return;
+      }
+
       renderEditor();
     } catch (error) {
+      if (destroyed || requestedVersion !== loadVersion) {
+        return;
+      }
+
       console.error("Item fields could not be loaded:", error);
       renderMessage(
         "Item fields could not be loaded",
@@ -240,6 +261,8 @@ export function createItemEntryDialog({
       return;
     }
 
+    resetClearConfirmation();
+
     if (prefersReducedMotion()) {
       dialog.close();
       return;
@@ -255,6 +278,17 @@ export function createItemEntryDialog({
   }
 
   closeButton.addEventListener("click", requestClose);
+  clearButton.addEventListener("click", () => {
+    if (clearButton.dataset.confirming === "true") {
+      resetDraft();
+      renderEditor();
+      return;
+    }
+
+    clearButton.dataset.confirming = "true";
+    clearButton.textContent = "Confirm clear";
+    clearConfirmationTimer = globalThis.setTimeout(resetClearConfirmation, 4000);
+  });
   dialog.addEventListener("cancel", (event) => {
     event.preventDefault();
     requestClose();
@@ -262,8 +296,27 @@ export function createItemEntryDialog({
 
   return {
     dialog,
+    destroy() {
+      destroyed = true;
+      loadVersion += 1;
+      globalThis.clearTimeout(closeTimer);
+      globalThis.clearTimeout(clearConfirmationTimer);
+      contentTransition.cancel();
+      destroyCurrentScreen?.();
+      destroyCurrentScreen = null;
+      isClosing = false;
+      delete dialog.dataset.closing;
+      if (dialog.open) {
+        dialog.close();
+      }
+      resetDraft();
+    },
     open() {
-      if (!dialog.open) {
+      if (!destroyed && !dialog.open) {
+        if (currentScreen === "success") {
+          resetDraft();
+          renderEditor();
+        }
         dialog.showModal();
         loadFields();
       }

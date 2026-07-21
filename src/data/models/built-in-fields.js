@@ -19,7 +19,7 @@ export const BUILT_IN_ITEM_FIELDS = Object.freeze([
     key: "image",
     displayName: "Image",
     dataType: "image",
-    isRequired: false,
+    isRequired: true,
     position: 2
   })
 ]);

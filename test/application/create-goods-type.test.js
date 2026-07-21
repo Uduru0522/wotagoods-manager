@@ -83,6 +83,47 @@ test("field definition records validate selection option identity", () => {
   );
 });
 
+test("boolean fields normalize legacy and configurable option labels", () => {
+  const legacy = createFieldDefinitionRecord(
+    {
+      id: "censored",
+      goodsTypeId: "figures",
+      key: "censored",
+      displayName: "Censorship",
+      dataType: "boolean",
+      position: 3
+    },
+    { now: () => FIXED_TIME }
+  );
+  const configured = createFieldDefinitionRecord({
+    ...legacy,
+    id: "custom-censored",
+    options: { falseLabel: "Uncensored", trueLabel: "Censored" }
+  });
+
+  assert.deepEqual(legacy.options, { falseLabel: "No", trueLabel: "Yes" });
+  assert.deepEqual(configured.options, {
+    falseLabel: "Uncensored",
+    trueLabel: "Censored"
+  });
+  assert.throws(
+    () => createFieldDefinitionRecord({
+      ...legacy,
+      id: "invalid-toggle",
+      options: { falseLabel: "", trueLabel: "On" }
+    }),
+    /non-empty/
+  );
+  assert.throws(
+    () => createFieldDefinitionRecord({
+      ...legacy,
+      id: "duplicate-toggle",
+      options: { falseLabel: "Same label", trueLabel: "same  label" }
+    }),
+    /must be different/
+  );
+});
+
 test("goods-type creation builds the type and protected fields as one storage request", async () => {
   const writes = [];
   const generatedIds = ["goods-id", "field-id", "field-name", "field-image"];
@@ -127,6 +168,10 @@ test("goods-type creation builds the type and protected fields as one storage re
     result.fieldDefinitions.every(
       ({ createdAt, updatedAt }) => createdAt === FIXED_TIME && updatedAt === FIXED_TIME
     )
+  );
+  assert.equal(
+    result.fieldDefinitions.find(({ key }) => key === "image").isRequired,
+    true
   );
 });
 

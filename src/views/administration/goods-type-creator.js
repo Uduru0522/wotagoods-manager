@@ -1,7 +1,10 @@
 import { createActionButton } from "../../shared/action-button.js";
 import { createContentTransition } from "../../shared/content-transition.js";
 import { createElement } from "../../shared/dom.js";
-import { createMetaList } from "../../shared/ui-components.js";
+import {
+  createMetaList,
+  createRequiredMark
+} from "../../shared/ui-components.js";
 
 function normalizeDisplayName(value) {
   return value.trim().replace(/\s+/g, " ").toLocaleLowerCase();
@@ -39,13 +42,7 @@ function createEditorField({ description, id, label, required = false, multiline
   labelRow.append(createElement("strong", { textContent: label }));
 
   if (required) {
-    labelRow.append(
-      createElement("span", {
-        attributes: { "aria-label": "Required" },
-        className: "required-mark",
-        textContent: "!"
-      })
-    );
+    labelRow.append(createRequiredMark());
   }
 
   field.append(

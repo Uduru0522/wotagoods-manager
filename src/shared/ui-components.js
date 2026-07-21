@@ -1,6 +1,14 @@
 import { createElement } from "./dom.js";
 import { bindDragScroll } from "./drag-scroll.js";
 
+export function createRequiredMark() {
+  return createElement("span", {
+    attributes: { "aria-label": "Required" },
+    className: "required-mark",
+    textContent: "*"
+  });
+}
+
 export function createMetaList(items) {
   const list = createElement("dl", { className: "meta-list" });
 

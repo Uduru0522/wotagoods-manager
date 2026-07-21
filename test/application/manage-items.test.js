@@ -2,14 +2,22 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
-  createItemManagementOperations,
+  createItemManagementOperations
+} from "../../src/application/items/manage-items.js";
+import {
   normalizeHttpsUrl,
   normalizeItemValues
-} from "../../src/application/items/manage-items.js";
+} from "../../src/application/items/item-values.js";
 import { createFieldDefinitionRecord } from "../../src/data/models/field-definition.js";
 import { createItemRecord, parseItemRecord } from "../../src/data/models/item.js";
 
 const FIXED_TIME = "2026-07-20T00:00:00.000Z";
+const TEST_IMAGE = Object.freeze({
+  data: new Blob(["image"], { type: "image/jpeg" }),
+  height: 792,
+  mediaType: "image/jpeg",
+  width: 560
+});
 
 function createField(input) {
   return createFieldDefinitionRecord(
@@ -65,6 +73,10 @@ test("item values validate supported field types and stable selection IDs", () =
     /valid date/
   );
   assert.throws(
+    () => normalizeItemValues(fields, { release: "45235-12-31" }),
+    /Release must be a valid date/
+  );
+  assert.throws(
     () => normalizeItemValues(fields, { status: "unknown" }),
     /invalid selection/
   );
@@ -91,6 +103,7 @@ test("web addresses default to https and reject explicit insecure URLs", () => {
 
 test("item creation reloads active fields and writes one validated record", async () => {
   const writes = [];
+  const generatedIds = ["asset-1", "item-1"];
   const nameField = createField({
     id: "field-name",
     key: "name",
@@ -114,12 +127,13 @@ test("item creation reloads active fields and writes one validated record", asyn
       async listGoodsTypes() { return [{ id: "figures" }]; },
       async listItems() { return []; }
     },
-    generateId: () => "item-1",
+    generateId: () => generatedIds.shift(),
     now: () => FIXED_TIME
   });
 
   const result = await operations.createItem({
     goodsTypeId: "figures",
+    image: TEST_IMAGE,
     name: " Example ",
     customValues: { notes: "Boxed" }
   });
@@ -128,17 +142,28 @@ test("item creation reloads active fields and writes one validated record", asyn
   assert.deepEqual(result, writes[0]);
   assert.equal(result.item.name, "Example");
   assert.deepEqual(result.item.customValues, { notes: "Boxed" });
-  assert.equal(result.asset, null);
+  assert.equal(result.asset.id, "asset-1");
+});
+
+test("item creation requires an image", async () => {
+  const operations = createItemManagementOperations({
+    storage: {
+      async createItem() { throw new Error("should not write"); },
+      async getAsset() { return null; },
+      async listFieldDefinitions() { return []; },
+      async listGoodsTypes() { return [{ id: "figures" }]; },
+      async listItems() { return []; }
+    }
+  });
+
+  await assert.rejects(
+    operations.createItem({ goodsTypeId: "figures", name: "Example" }),
+    /Image is required/
+  );
 });
 
 test("item creation builds an image asset and item reference for one storage write", async () => {
   const writes = [];
-  const image = {
-    data: new Blob(["image"], { type: "image/jpeg" }),
-    height: 792,
-    mediaType: "image/jpeg",
-    width: 560
-  };
   const generatedIds = ["asset-1", "item-1"];
   const operations = createItemManagementOperations({
     storage: {
@@ -154,7 +179,7 @@ test("item creation builds an image asset and item reference for one storage wri
 
   const result = await operations.createItem({
     goodsTypeId: "figures",
-    image,
+    image: TEST_IMAGE,
     name: "Example"
   });
 
