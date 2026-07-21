@@ -24,7 +24,7 @@ function parseOptionLabels(value) {
 }
 
 export function createFieldEditor({ field, onCancel, onSave }) {
-  const isDraft = field?.stagedKind === "add";
+  const isNew = !field || field.stagedKind === "add";
   const form = createElement("form", { className: "field-editor" });
   const heading = createElement("div", { className: "form-heading" });
   const nameInput = createElement("input", {
@@ -46,7 +46,7 @@ export function createFieldEditor({ field, onCancel, onSave }) {
     className: "form-feedback"
   });
   const cancelButton = createActionButton("Cancel");
-  const stageButton = createActionButton(isDraft ? "Stage field" : "Stage changes", {
+  const stageButton = createActionButton(isNew ? "Stage field" : "Stage changes", {
     className: "primary-action",
     type: "submit"
   });
@@ -59,9 +59,20 @@ export function createFieldEditor({ field, onCancel, onSave }) {
 
   nameInput.value = field?.displayName ?? "";
   typeSelect.value = field?.dataType ?? CUSTOM_FIELD_TYPES[0].value;
-  typeSelect.disabled = Boolean(field && !isDraft);
+  typeSelect.disabled = Boolean(field && !isNew);
   requiredInput.checked = field?.isRequired ?? false;
-  requiredInput.disabled = Boolean(field && !isDraft && !field.originalIsRequired);
+
+  function updateRequiredState() {
+    if (typeSelect.value === "boolean") {
+      requiredInput.checked = true;
+      requiredInput.disabled = true;
+      requiredRow.hidden = true;
+      return;
+    }
+
+    requiredRow.hidden = false;
+    requiredInput.disabled = Boolean(field && !isNew && !field.originalIsRequired);
+  }
 
   requiredRow.append(
     requiredInput,
@@ -70,7 +81,7 @@ export function createFieldEditor({ field, onCancel, onSave }) {
     })
   );
   heading.append(
-    createElement("h4", { textContent: isDraft ? "Edit staged field" : field ? "Edit field" : "Add field" }),
+    createElement("h4", { textContent: field?.stagedKind === "add" ? "Edit staged field" : field ? "Edit field" : "Add field" }),
     createElement("p", {
       textContent: "Changes remain local until the complete staged set is applied."
     })
@@ -79,11 +90,33 @@ export function createFieldEditor({ field, onCancel, onSave }) {
   function renderOptions() {
     optionsArea.replaceChildren();
 
+    if (typeSelect.value === "boolean") {
+      const labels = field?.options ?? { falseLabel: "No", trueLabel: "Yes" };
+      const labelGrid = createElement("div", { className: "binary-option-editor" });
+      const falseLabelInput = createElement("input", {
+        attributes: { required: "", type: "text" }
+      });
+      const trueLabelInput = createElement("input", {
+        attributes: { required: "", type: "text" }
+      });
+
+      falseLabelInput.dataset.role = "false-label";
+      trueLabelInput.dataset.role = "true-label";
+      falseLabelInput.value = labels.falseLabel;
+      trueLabelInput.value = labels.trueLabel;
+      labelGrid.append(
+        createLabel("Left option", falseLabelInput, "Shown when the toggle is off."),
+        createLabel("Right option", trueLabelInput, "Shown when the toggle is on.")
+      );
+      optionsArea.append(labelGrid);
+      return;
+    }
+
     if (typeSelect.value !== "select") {
       return;
     }
 
-    const existingChoices = isDraft
+    const existingChoices = isNew
       ? []
       : (field?.options?.choices ?? []).map(({ label }) => label);
     const optionInput = createElement("textarea", {
@@ -91,12 +124,12 @@ export function createFieldEditor({ field, onCancel, onSave }) {
     });
 
     optionInput.dataset.role = "option-labels";
-    optionInput.value = isDraft
+    optionInput.value = isNew
       ? (field?.options?.choices ?? []).map(({ label }) => label).join("\n")
       : (field?.addOptionLabels ?? []).join("\n");
     optionsArea.append(
       createLabel(
-        isDraft || !field ? "Options" : "Additional options",
+        isNew ? "Options" : "Additional options",
         optionInput,
         "Enter one option per line."
       )
@@ -112,7 +145,10 @@ export function createFieldEditor({ field, onCancel, onSave }) {
     }
   }
 
-  typeSelect.addEventListener("change", renderOptions);
+  typeSelect.addEventListener("change", () => {
+    updateRequiredState();
+    renderOptions();
+  });
   nameInput.addEventListener("input", () => {
     const isInvalid = !nameInput.value.trim();
     nameInput.toggleAttribute("data-invalid", isInvalid);
@@ -130,6 +166,8 @@ export function createFieldEditor({ field, onCancel, onSave }) {
     const normalizedOptionLabels = optionLabels.map((label) =>
       label.replace(/\s+/g, " ").toLocaleLowerCase()
     );
+    const falseLabel = optionsArea.querySelector('[data-role="false-label"]')?.value.trim();
+    const trueLabel = optionsArea.querySelector('[data-role="true-label"]')?.value.trim();
 
     if (!displayName) {
       nameInput.toggleAttribute("data-invalid", true);
@@ -139,13 +177,21 @@ export function createFieldEditor({ field, onCancel, onSave }) {
       return;
     }
 
-    if (typeSelect.value === "select" && (isDraft || !field) && optionLabels.length === 0) {
+    if (typeSelect.value === "select" && isNew && optionLabels.length === 0) {
       feedback.textContent = "Enter at least one option for a selection list.";
       return;
     }
 
     if (new Set(normalizedOptionLabels).size !== optionLabels.length) {
       feedback.textContent = "Selection option names must be unique.";
+      return;
+    }
+
+    if (
+      typeSelect.value === "boolean" &&
+      (!falseLabel || !trueLabel || falseLabel.toLocaleLowerCase() === trueLabel.toLocaleLowerCase())
+    ) {
+      feedback.textContent = "Enter two different labels for the toggle.";
       return;
     }
 
@@ -167,7 +213,12 @@ export function createFieldEditor({ field, onCancel, onSave }) {
         dataType: typeSelect.value,
         isRequired: requiredInput.checked,
         ...(typeSelect.value === "select"
-          ? { [isDraft || !field ? "optionLabels" : "addOptionLabels"]: optionLabels }
+          ? { [isNew ? "optionLabels" : "addOptionLabels"]: optionLabels }
+          : {}),
+        ...(typeSelect.value === "boolean"
+          ? isNew
+            ? { falseLabel, trueLabel }
+            : { booleanOptions: { falseLabel, trueLabel } }
           : {})
       });
     } catch (error) {
@@ -187,6 +238,7 @@ export function createFieldEditor({ field, onCancel, onSave }) {
     actions
   );
   renderOptions();
+  updateRequiredState();
   requestAnimationFrame(() => nameInput.focus());
 
   return form;

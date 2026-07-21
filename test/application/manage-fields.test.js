@@ -105,6 +105,64 @@ test("field management adds a selection field with stable options", async () => 
   );
 });
 
+test("field management adds a required two-option field with custom labels", async () => {
+  const { operations } = createHarness();
+
+  const result = await operations.applyChanges({
+    goodsTypeId: "figures",
+    changes: [
+      {
+        kind: FIELD_CHANGE_KINDS.add,
+        draftId: "draft-censorship",
+        displayName: "Censorship",
+        dataType: "boolean",
+        falseLabel: "Uncensored",
+        trueLabel: "Censored",
+        isRequired: true
+      }
+    ]
+  });
+  const added = result.find(({ key }) => key === "censorship");
+
+  assert.equal(added.isRequired, true);
+  assert.deepEqual(added.options, {
+    falseLabel: "Uncensored",
+    trueLabel: "Censored"
+  });
+});
+
+test("field management upgrades legacy optional two-option fields to required", async () => {
+  const { fields, operations } = createHarness();
+  fields.push(
+    createFieldDefinitionRecord(
+      {
+        id: "legacy-toggle",
+        goodsTypeId: "figures",
+        key: "legacy_toggle",
+        displayName: "Legacy toggle",
+        dataType: "boolean",
+        isRequired: false,
+        options: null,
+        position: 5
+      },
+      { now: () => FIXED_TIME }
+    )
+  );
+
+  const result = await operations.applyChanges({
+    goodsTypeId: "figures",
+    changes: [
+      {
+        kind: FIELD_CHANGE_KINDS.update,
+        fieldId: "legacy-toggle",
+        isRequired: true
+      }
+    ]
+  });
+
+  assert.equal(result.find(({ id }) => id === "legacy-toggle").isRequired, true);
+});
+
 test("field management applies edits, order changes, and soft deletion together", async () => {
   const { operations, writes } = createHarness();
 

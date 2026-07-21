@@ -3,7 +3,7 @@ export const CUSTOM_FIELD_TYPES = Object.freeze([
   Object.freeze({ value: "long_text", label: "Long text" }),
   Object.freeze({ value: "number", label: "Number" }),
   Object.freeze({ value: "date", label: "Date" }),
-  Object.freeze({ value: "boolean", label: "Yes / No" }),
+  Object.freeze({ value: "boolean", label: "Two-option toggle" }),
   Object.freeze({ value: "url", label: "Web address" }),
   Object.freeze({ value: "select", label: "Selection list" })
 ]);
@@ -78,6 +78,19 @@ export function createSelectOptions(labels, generateId) {
       label
     }))
   };
+}
+
+export function createBooleanOptions(falseLabel, trueLabel) {
+  const options = {
+    falseLabel: requireNonEmptyString(falseLabel, "Left option label"),
+    trueLabel: requireNonEmptyString(trueLabel, "Right option label")
+  };
+
+  if (normalizeLabel(options.falseLabel) === normalizeLabel(options.trueLabel)) {
+    throw new TypeError("The two toggle option labels must be different.");
+  }
+
+  return options;
 }
 
 export function appendSelectOptions(currentOptions, newLabels, generateId) {

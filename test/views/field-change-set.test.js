@@ -75,3 +75,33 @@ test("field change set removes an edit when values return to their base state", 
   });
   assert.equal(changeSet.changeCount, 0);
 });
+
+test("field change set previews two-option label edits", () => {
+  const fields = [
+    ...FIELDS,
+    {
+      id: "censored",
+      displayName: "Censorship",
+      dataType: "boolean",
+      isBuiltIn: false,
+      isDeleted: false,
+      isRequired: false,
+      options: { falseLabel: "No", trueLabel: "Yes" },
+      position: 4
+    }
+  ];
+  const changeSet = createFieldChangeSet(fields);
+
+  changeSet.stageUpdate("censored", {
+    booleanOptions: { falseLabel: "Uncensored", trueLabel: "Censored" }
+  });
+
+  assert.deepEqual(changeSet.getChanges()[0].booleanOptions, {
+    falseLabel: "Uncensored",
+    trueLabel: "Censored"
+  });
+  assert.deepEqual(changeSet.getPreviewFields().at(-1).options, {
+    falseLabel: "Uncensored",
+    trueLabel: "Censored"
+  });
+});

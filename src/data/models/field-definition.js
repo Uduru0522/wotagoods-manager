@@ -11,6 +11,11 @@ export const FIELD_DATA_TYPES = Object.freeze([
   "url"
 ]);
 
+export const DEFAULT_BOOLEAN_OPTIONS = Object.freeze({
+  falseLabel: "No",
+  trueLabel: "Yes"
+});
+
 function requireRecord(value) {
   if (!value || typeof value !== "object" || Array.isArray(value)) {
     throw new TypeError("Field definition must be an object.");
@@ -84,9 +89,27 @@ function requireNullableObject(value, fieldName) {
 }
 
 function requireFieldOptions(dataType, value) {
+  if (dataType === "boolean") {
+    const options = value === null ? DEFAULT_BOOLEAN_OPTIONS : requireNullableObject(value, "options");
+    const falseLabel = requireCanonicalString(options?.falseLabel, "false option label");
+    const trueLabel = requireCanonicalString(options?.trueLabel, "true option label");
+
+    if (
+      falseLabel.replace(/\s+/g, " ").toLocaleLowerCase() ===
+      trueLabel.replace(/\s+/g, " ").toLocaleLowerCase()
+    ) {
+      throw new TypeError("Boolean option labels must be different.");
+    }
+
+    return {
+      falseLabel,
+      trueLabel
+    };
+  }
+
   if (dataType !== "select") {
     if (value !== null) {
-      throw new TypeError("options must be null for non-selection fields.");
+      throw new TypeError("options must be null for this field type.");
     }
 
     return null;

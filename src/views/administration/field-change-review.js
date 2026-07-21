@@ -16,10 +16,13 @@ function describeChange(change, fieldsById) {
   const field = fieldsById.get(change.fieldId);
 
   if (change.kind === FIELD_CHANGE_KINDS.add) {
+    const binaryDetails = change.dataType === "boolean"
+      ? `: ${change.falseLabel} / ${change.trueLabel}`
+      : "";
     return {
       action: "Add",
       field: change.displayName,
-      details: `${TYPE_LABELS.get(change.dataType)}${change.isRequired ? ", required" : ""}`
+      details: `${TYPE_LABELS.get(change.dataType)}${binaryDetails}${change.isRequired ? ", required" : ""}`
     };
   }
 
@@ -41,6 +44,11 @@ function describeChange(change, fieldsById) {
   }
   if (change.addOptionLabels?.length) {
     details.push(`Add ${change.addOptionLabels.length} options`);
+  }
+  if (change.booleanOptions) {
+    details.push(
+      `Change options to ${change.booleanOptions.falseLabel} / ${change.booleanOptions.trueLabel}`
+    );
   }
   if (change.position !== undefined && change.position !== field?.position) {
     details.push("Reorder");

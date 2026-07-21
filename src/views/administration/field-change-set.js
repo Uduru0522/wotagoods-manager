@@ -60,6 +60,13 @@ export function createFieldChangeSet(fields) {
     if (mergedValues.addOptionLabels?.length) {
       nextChange.addOptionLabels = clone(mergedValues.addOptionLabels);
     }
+    if (
+      mergedValues.booleanOptions &&
+      (mergedValues.booleanOptions.falseLabel !== field.options?.falseLabel ||
+        mergedValues.booleanOptions.trueLabel !== field.options?.trueLabel)
+    ) {
+      nextChange.booleanOptions = clone(mergedValues.booleanOptions);
+    }
 
     if (Object.keys(nextChange).length === 2) {
       changes.delete(fieldId);
@@ -153,16 +160,23 @@ export function createFieldChangeSet(fields) {
           isRequired: change.isRequired,
           options: change.dataType === "select"
             ? { choices: change.optionLabels.map((label) => ({ label })) }
-            : null,
+            : change.dataType === "boolean"
+              ? {
+                falseLabel: change.falseLabel,
+                trueLabel: change.trueLabel
+              }
+              : null,
           position: builtIns.length + index,
           stagedKind: FIELD_CHANGE_KINDS.add
         };
       }
 
       const field = baseById.get(fieldId);
+      const update = change?.kind === FIELD_CHANGE_KINDS.update ? clone(change) : {};
       return {
         ...clone(field),
-        ...(change?.kind === FIELD_CHANGE_KINDS.update ? clone(change) : {}),
+        ...update,
+        ...(update.booleanOptions ? { options: clone(update.booleanOptions) } : {}),
         originalIsRequired: field.isRequired,
         position: builtIns.length + index,
         stagedKind: change?.kind ?? null

@@ -2,6 +2,7 @@ import { createFieldDefinitionRecord } from "../../data/models/field-definition.
 import {
   appendSelectOptions,
   assertCustomFieldType,
+  createBooleanOptions,
   createSelectOptions,
   createUniqueFieldKey
 } from "./field-configuration.js";
@@ -95,11 +96,13 @@ export function createFieldManagementOperations({
             key: createUniqueFieldKey(displayName, existingKeys),
             displayName,
             dataType,
-            isRequired: change.isRequired ?? false,
+            isRequired: dataType === "boolean" ? true : (change.isRequired ?? false),
             position: Number.MAX_SAFE_INTEGER,
             options: dataType === "select"
               ? createSelectOptions(change.optionLabels, generateId)
-              : null
+              : dataType === "boolean"
+                ? createBooleanOptions(change.falseLabel, change.trueLabel)
+                : null
           },
           { now: () => timestamp }
         );
@@ -148,7 +151,7 @@ export function createFieldManagementOperations({
 
       const nextRequired = change.isRequired ?? current.isRequired;
 
-      if (!current.isRequired && nextRequired) {
+      if (!current.isRequired && nextRequired && current.dataType !== "boolean") {
         throw new TypeError("Making an existing optional field required is deferred.");
       }
 
@@ -158,7 +161,12 @@ export function createFieldManagementOperations({
         isRequired: nextRequired,
         options: change.addOptionLabels
           ? appendSelectOptions(current.options, change.addOptionLabels, generateId)
-          : current.options,
+          : current.dataType === "boolean" && change.booleanOptions
+            ? createBooleanOptions(
+              change.booleanOptions.falseLabel,
+              change.booleanOptions.trueLabel
+            )
+            : current.options,
         updatedAt: timestamp
       });
 
