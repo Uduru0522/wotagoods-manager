@@ -60,6 +60,7 @@ test("content transition replaces existing content between exit and entrance pha
     assert.equal(element.dataset.contentTransition, "exit");
 
     await wait();
+    await wait(0);
 
     assert.equal(state, "editor");
     assert.equal(element.dataset.contentTransition, undefined);
@@ -79,6 +80,7 @@ test("content transition can animate the first editor inserted into an empty slo
     assert.equal(element.dataset.contentTransition, "enter");
 
     await wait();
+    await wait(0);
 
     assert.equal(element.dataset.contentTransition, undefined);
   } finally {
@@ -117,6 +119,27 @@ test("content transition keeps only the newest pending replacement", async () =>
     await wait(15);
 
     assert.deepEqual(appliedStates, ["workspace"]);
+  } finally {
+    restoreEnvironment();
+  }
+});
+
+test("content transition cancellation prevents pending replacement work", async () => {
+  const restoreEnvironment = installMotionEnvironment({ duration: "5ms" });
+  const element = createFakeElement(true);
+  const transition = createContentTransition(element);
+  let wasUpdated = false;
+
+  try {
+    transition.replace(() => {
+      wasUpdated = true;
+    });
+    transition.cancel();
+
+    await wait(15);
+
+    assert.equal(wasUpdated, false);
+    assert.equal(element.dataset.contentTransition, undefined);
   } finally {
     restoreEnvironment();
   }

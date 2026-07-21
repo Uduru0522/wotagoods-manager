@@ -16,14 +16,16 @@ export function createApp({ storageFactory = createAppStorage } = {}) {
   const appMode = createAppMode();
   const themeController = createThemeController();
   const mutationController = createMutationController(elements.appShell);
+  let unmountRuntime = null;
   let startupCoordinator;
 
   startupCoordinator = createStartupCoordinator({
     createStorage: storageFactory,
     indexedDBFactory: globalThis.indexedDB,
     isDebugMode: appMode.isDebugMode,
-    mountApplication: ({ goodsTypes, initialViewId, storage }) =>
-      mountAppRuntime({
+    mountApplication: ({ goodsTypes, initialViewId, storage }) => {
+      unmountRuntime?.();
+      unmountRuntime = mountAppRuntime({
         elements,
         goodsTypes,
         initialViewId,
@@ -33,7 +35,8 @@ export function createApp({ storageFactory = createAppStorage } = {}) {
         onLocalDataReset: () => startupCoordinator.refresh(),
         storage,
         themeController
-      }),
+      });
+    },
     renderError: (error, options) => renderStartupError(elements, error, options),
     renderLoading: () => renderStartupLoading(elements)
   });
@@ -51,6 +54,8 @@ export function createApp({ storageFactory = createAppStorage } = {}) {
     }
 
     hasStarted = false;
+    unmountRuntime?.();
+    unmountRuntime = null;
     startupCoordinator.stop();
     window.removeEventListener("pagehide", handlePageHide);
   }

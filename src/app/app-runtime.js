@@ -43,6 +43,7 @@ export function mountAppRuntime({
     navigation,
     renderer,
     views,
+    viewActions: elements.viewActions,
     viewPanel: elements.viewPanel,
     viewSection: elements.viewSection,
     viewTitle: elements.viewTitle
@@ -50,4 +51,5 @@ export function mountAppRuntime({
 
   navigation.render();
   router.setActiveView(initialViewId);
+  return () => router.destroy();
 }

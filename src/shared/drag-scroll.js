@@ -1,5 +1,19 @@
 const DRAG_THRESHOLD_PX = 6;
 const boundContainers = new WeakMap();
+const DRAG_EXCLUSION_SELECTOR = [
+  "dialog",
+  "button",
+  "input",
+  "select",
+  "textarea",
+  "a",
+  "[role='switch']",
+  "[data-no-drag-scroll]"
+].join(",");
+
+function isExcludedDragTarget(target) {
+  return typeof target?.closest === "function" && Boolean(target.closest(DRAG_EXCLUSION_SELECTOR));
+}
 
 function canScrollOnAxis(container, axis) {
   if (axis === "x") {
@@ -58,12 +72,18 @@ export function bindDragScroll(container, { axis }) {
   boundContainers.set(container, boundAxes);
 
   container.addEventListener("pointerdown", (event) => {
-    if (event.button !== 0 || !canScrollOnAxis(container, axis)) {
+    isDragging = false;
+    didDrag = false;
+    pointerId = null;
+
+    if (
+      event.button !== 0 ||
+      isExcludedDragTarget(event.target) ||
+      !canScrollOnAxis(container, axis)
+    ) {
       return;
     }
 
-    isDragging = false;
-    didDrag = false;
     pointerId = event.pointerId;
     dragStart = getPrimaryCoordinate(event, axis);
     scrollStart = getScrollPosition(container, axis);

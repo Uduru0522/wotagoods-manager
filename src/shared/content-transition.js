@@ -76,5 +76,12 @@ export function createContentTransition(element, { animateInitial = false } = {}
     );
   }
 
-  return { replace };
+  function cancel() {
+    operationId += 1;
+    clearPendingWork();
+    delete element.dataset.contentTransition;
+    element.classList.remove("content-transition-preparing");
+  }
+
+  return { cancel, replace };
 }

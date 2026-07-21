@@ -2,7 +2,7 @@ export const APP_CONFIG = {
   debugQueryParam: "debug",
   defaultViewId: "dashboard",
   layout: {
-    narrowQuery: "(max-width: 760px)",
+    narrowQuery: "(max-width: 1100px)",
     transitionDurationMs: 180
   },
   motion: {
@@ -13,6 +13,7 @@ export const APP_CONFIG = {
     appShell: ".app-shell",
     primaryNavList: "#primaryNavList",
     utilityNavList: "#utilityNavList",
+    viewActions: "#viewActions",
     viewPanel: "#viewPanel",
     viewSection: "#viewSection",
     viewTitle: "#viewTitle"
